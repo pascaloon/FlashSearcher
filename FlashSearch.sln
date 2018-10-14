@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashSearch", "FlashSearch\FlashSearch.csproj", "{B949515C-9FAD-49CF-A4EE-270ABFF24F18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashSearch.CLI", "FlashSearch.CLI\FlashSearch.CLI.csproj", "{3EE811D8-64DA-4509-ACAA-8220DFB74418}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B949515C-9FAD-49CF-A4EE-270ABFF24F18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B949515C-9FAD-49CF-A4EE-270ABFF24F18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B949515C-9FAD-49CF-A4EE-270ABFF24F18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B949515C-9FAD-49CF-A4EE-270ABFF24F18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EE811D8-64DA-4509-ACAA-8220DFB74418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EE811D8-64DA-4509-ACAA-8220DFB74418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EE811D8-64DA-4509-ACAA-8220DFB74418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EE811D8-64DA-4509-ACAA-8220DFB74418}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
