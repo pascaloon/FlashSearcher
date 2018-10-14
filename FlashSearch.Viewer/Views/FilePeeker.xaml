@@ -1,0 +1,29 @@
+<UserControl x:Class="FlashSearch.Viewer.Views.FilePeeker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:FlashSearch.Viewer.Views"
+             mc:Ignorable="d"
+             Loaded="FilePeeker_OnLoaded"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid x:Name="LayoutRoot">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ListBox ItemsSource="{Binding LineNumbers}" Focusable="False" >
+            <!-- <ListBox.ItemContainerStyle> -->
+            <!--     <Style TargetType="ContentControl" BasedOn="{StaticResource {x:Type ContentControl}}"> -->
+            <!--         <Setter Property="Focusable" Value="False" /> -->
+            <!--     </Style> -->
+            <!-- </ListBox.ItemContainerStyle> -->
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" FontSize="10" Margin="0.75,0" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <RichTextBox Grid.Column="1" x:Name="RTB" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,28 @@
+﻿<Window x:Class="FlashSearch.Viewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FlashSearch.Viewer"
+        xmlns:views="clr-namespace:FlashSearch.Viewer.Views"
+        xmlns:viewModels="clr-namespace:FlashSearch.Viewer.ViewModels"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525"
+        DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:WelcomeViewModel}">
+            <views:WelcomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ResultPeekViewModel}">
+            <views:ResultPeekView />
+        </DataTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <views:SearchView Grid.Column="0" />
+        <ContentControl Grid.Column="1" Content="{Binding RightContent}" />
+    </Grid>
+</Window>

@@ -52,12 +52,13 @@ namespace FlashSearch
     public class SearchResult
     {
         public FileInfo FileInfo { get; }
-        public uint LineNumber { get; }
+        public int LineNumber { get; }
+        
         public string LineContent { get; }
         public Encoding Encoding { get; }
         public IEnumerable<MatchPosition> MatchPositions { get; }
 
-        public SearchResult(FileInfo fileInfo, uint lineNumber, string lineContent, Encoding encoding, IEnumerable<MatchPosition> match)
+        public SearchResult(FileInfo fileInfo, int lineNumber, string lineContent, Encoding encoding, IEnumerable<MatchPosition> match)
         {
             FileInfo = fileInfo;
             LineNumber = lineNumber;
@@ -99,6 +100,7 @@ namespace FlashSearch
                 SearchContentInFolder(directory, regex);
                 _completed = true;
             });
+            
             return this;
         }
 
@@ -116,16 +118,14 @@ namespace FlashSearch
                     continue;
 
                 Encoding encoding = null;
-//                Console.WriteLine($"Looking at {file.FullName}");
                 using (StreamReader sr = new StreamReader(file.FullName, Encoding.Default, true))
                 {
                     if (sr.Peek() >= 0)
                         sr.Read();
+                    else continue;
+                    
                     if (!Configuration.IsAcceptedEncoding(sr.CurrentEncoding))
-                    {
-//                        Console.WriteLine($"Invalid Encoding ({sr.CurrentEncoding.BodyName}) for {file.FullName}");
                         continue;
-                    }
 
                     encoding = sr.CurrentEncoding;
                 }
@@ -145,7 +145,7 @@ namespace FlashSearch
 
         private IEnumerable<SearchResult> SearchContentInFile(FileInfo file, Regex regex, Encoding encoding)
         {
-            uint lineNumber = 0;
+            int lineNumber = 0;
             foreach (string line in File.ReadLines(file.FullName, encoding))
             {
                 MatchCollection matches = regex.Matches(line);
