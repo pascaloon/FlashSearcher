@@ -12,12 +12,12 @@ namespace FlashSearch.Viewer.ViewModels
     public class SearchEvent
     {
         public SearchResult SelectedResult { get; }
-        public Regex UsedRegex { get; }
+        public IContentSelector ContentSelector { get; }
 
-        public SearchEvent(SearchResult selectedResult, Regex usedRegex)
+        public SearchEvent(SearchResult selectedResult, IContentSelector contentSelector)
         {
             SelectedResult = selectedResult;
-            UsedRegex = usedRegex;
+            ContentSelector = contentSelector;
         }
     }
     
@@ -39,6 +39,8 @@ namespace FlashSearch.Viewer.ViewModels
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
 
+        private RegexContentSelector _currentContentSelector;
+        
         private SearchResultViewModel _selectedSearchResultViewModel;
 
         public SearchResultViewModel SelectedSearchResultViewModel
@@ -47,7 +49,7 @@ namespace FlashSearch.Viewer.ViewModels
             set
             {
                 Set(ref _selectedSearchResultViewModel, value);
-                Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, new Regex(Query, RegexOptions.IgnoreCase)));
+                Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, _currentContentSelector));
 
             }
         }
@@ -62,11 +64,12 @@ namespace FlashSearch.Viewer.ViewModels
 
         private void Search()
         {
+            _currentContentSelector = new RegexContentSelector(Query);
             Results.Clear();
             Task.Run(() =>
             {
-                FlashSearcher flashSearcher = new FlashSearcher(SearchConfiguration.Default);
-                foreach (SearchResult result in flashSearcher.SearchContentInFolder(RootPath, Query))
+                FlashSearcher flashSearcher = new FlashSearcher();
+                foreach (SearchResult result in flashSearcher.SearchContentInFolder(RootPath, new AnyFileSelector(), _currentContentSelector))
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>
                     {

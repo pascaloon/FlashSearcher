@@ -38,6 +38,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentSelector.cs" />
+    <Compile Include="FileSelector.cs" />
     <Compile Include="FlashSearcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -32,7 +32,7 @@ namespace FlashSearch.Viewer.ViewModels
             {
                 RightContent = GlobalFactory.Container.Resolve<ResultPeekViewModel>(
                     new NamedParameter("searchResult", result.SelectedResult),
-                    new NamedParameter("regex", result.UsedRegex));
+                    new NamedParameter("contentSelector", result.ContentSelector));
             }
         }
     }

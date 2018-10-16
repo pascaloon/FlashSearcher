@@ -33,7 +33,7 @@ namespace FlashSearch.Viewer.Views
             FlowDocument doc = new FlowDocument();
             doc.PageWidth = 1000;
             LineNumbers.Clear();   
-            foreach (LineInfo line in _fileService.GetContextLines(FileName, LineNumber, ContextAmount, Regex))
+            foreach (LineInfo line in _fileService.GetContextLines(FileName, LineNumber, ContextAmount, ContentSelector))
             {
                 Paragraph p = new Paragraph();
                 p.LineHeight = 1;
@@ -107,13 +107,13 @@ namespace FlashSearch.Viewer.Views
             set { SetValue(ContextAmountProperty, value); }
         }
 
-        public static readonly DependencyProperty RegexProperty = DependencyProperty.Register(
-            "Regex", typeof(Regex), typeof(FilePeeker), new PropertyMetadata(default(Regex)));
+        public static readonly DependencyProperty ContentSelectorProperty = DependencyProperty.Register(
+            "ContentSelector", typeof(IContentSelector), typeof(FilePeeker), new PropertyMetadata(default(IContentSelector)));
 
-        public Regex Regex
+        public IContentSelector ContentSelector
         {
-            get { return (Regex) GetValue(RegexProperty); }
-            set { SetValue(RegexProperty, value); }
+            get { return (IContentSelector) GetValue(ContentSelectorProperty); }
+            set { SetValue(ContentSelectorProperty, value); }
         }
         
         #endregion

@@ -8,7 +8,7 @@ namespace FlashSearch.Viewer.Services
 {
     public class FileService
     {
-        public IEnumerable<LineInfo> GetContextLines(string path, int lineNumber, int contextLines, Regex regex)
+        public IEnumerable<LineInfo> GetContextLines(string path, int lineNumber, int contextLines, IContentSelector contentSelector)
         {
             if (lineNumber < 0 || contextLines < 0)
                 throw new ArgumentException();
@@ -29,17 +29,7 @@ namespace FlashSearch.Viewer.Services
             {
                 if (index >= begin)
                 {
-                    MatchCollection matches = regex.Matches(line);
-                    var matchPositions = new List<MatchPosition>(matches.Count);
-                    if (matches.Count > 0)
-                    {
-                        foreach (Match match in matches)
-                        {
-                            matchPositions.Add(new MatchPosition(match.Index, match.Length));
-                        }
-                    }
-                    yield return new LineInfo(line, index, matchPositions);
-
+                    yield return new LineInfo(line, index, contentSelector.GetMatches(line).ToList());
                 }
 
                 ++index;
