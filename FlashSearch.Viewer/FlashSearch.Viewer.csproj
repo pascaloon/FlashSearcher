@@ -78,6 +78,8 @@
     <Compile Include="Converters\BooleanToVisibility.cs" />
     <Compile Include="Services\FileService.cs" />
     <Compile Include="Services\GlobalFactory.cs" />
+    <Compile Include="Themes\LeftMarginMultiplierConverter.cs" />
+    <Compile Include="Themes\TreeViewItemExtensions.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ResultPeekViewModel.cs" />
     <Compile Include="ViewModels\SearchResultViewModel.cs" />
@@ -136,6 +138,13 @@
       <Project>{b949515c-9fad-49cf-a4ee-270abff24f18}</Project>
       <Name>FlashSearch</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Themes\CustomStyles.xaml" />
+    <Page Include="Themes\Styles.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\HappyFace.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

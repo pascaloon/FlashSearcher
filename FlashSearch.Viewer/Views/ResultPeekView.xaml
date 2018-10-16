@@ -8,12 +8,20 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=viewModels:ResultPeekViewModel, IsDesignTimeCreatable=False}" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="5, 0">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="{Binding FileName}" />
-        <local:FilePeeker Grid.Row="1" FileName="{Binding FileName}" LineNumber="{Binding LineNumber}" ContentSelector="{Binding ContentSelector}" ContextAmount="3" />
+        <TextBlock Grid.Row="0" Text="Result Peek" Style="{StaticResource TitleStyle}" />
+        <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="5, 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Text="{Binding FileName, Mode=OneWay}" IsReadOnly="True" />
+            <local:FilePeeker Grid.Row="1" FileName="{Binding FileName}" LineNumber="{Binding LineNumber}" ContentSelector="{Binding ContentSelector}" ContextAmount="6" />
+        </Grid>
     </Grid>
+    
 </UserControl>

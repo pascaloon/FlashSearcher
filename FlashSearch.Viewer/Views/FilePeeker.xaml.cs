@@ -33,7 +33,12 @@ namespace FlashSearch.Viewer.Views
         {
             FlowDocument doc = new FlowDocument();
             doc.PageWidth = 100.0;
-            LineNumbers.Clear();   
+            LineNumbers.Clear();
+            
+            SolidColorBrush foregroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("ForegroundBrush");
+            SolidColorBrush wordMatchForegroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("WordMatchForegroundBrush");
+            SolidColorBrush currentMatchedLineBackgroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("CurrentMatchedLineBackgroundBrush");
+            
             foreach (LineInfo line in _fileService.GetContextLines(FileName, LineNumber, ContextAmount, ContentSelector))
             {
                 double lineWidth = line.Content.Length * 7.0;
@@ -45,7 +50,7 @@ namespace FlashSearch.Viewer.Views
 
                 if (line.LineNumber == LineNumber)
                 {
-                    p.Background = Brushes.LightBlue;
+                    p.Background = currentMatchedLineBackgroundBrush;
                 }
                 
                 List<MatchPosition> positions = line.Matches.ToList();
@@ -57,15 +62,15 @@ namespace FlashSearch.Viewer.Views
                         string before = line.Content.Substring(lastIndex, positions[i].Begin - lastIndex);
                         string match = line.Content.Substring(positions[i].Begin, positions[i].Length);
                     
-                        p.Inlines.Add(new Run(before));
-                        p.Inlines.Add(new Bold(new Run(match)) {Foreground = Brushes.Green});
+                        p.Inlines.Add(new Run(before) {Foreground = foregroundBrush});
+                        p.Inlines.Add(new Bold(new Run(match)) {Foreground = wordMatchForegroundBrush});
                     }
                     string after = line.Content.Substring(positions.Last().Begin + positions.Last().Length);
-                    p.Inlines.Add(after);
+                    p.Inlines.Add(new Run(after){Foreground = foregroundBrush});
                 }
                 else
                 {
-                    p.Inlines.Add(line.Content);
+                    p.Inlines.Add(new Run(line.Content){Foreground = foregroundBrush});
                 }
                 
                 

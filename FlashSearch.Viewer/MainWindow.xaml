@@ -7,7 +7,8 @@
         xmlns:views="clr-namespace:FlashSearch.Viewer.Views"
         xmlns:viewModels="clr-namespace:FlashSearch.Viewer.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525"
+        Title="FlashSearch" Height="600" Width="1000"
+        Style="{StaticResource {x:Type Window}}"
         DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:WelcomeViewModel}">
@@ -20,9 +21,11 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="6" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <views:SearchView Grid.Column="0" />
-        <ContentControl Grid.Column="1" Content="{Binding RightContent}" />
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0" />
+        <ContentControl Grid.Column="2" Content="{Binding RightContent}" />
     </Grid>
 </Window>

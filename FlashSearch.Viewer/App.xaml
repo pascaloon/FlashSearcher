@@ -5,6 +5,14 @@
              xmlns:vm="clr-namespace:FlashSearch.Viewer.ViewModels"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <vm:ViewModelLocator x:Key="Locator" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes\Styles.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Themes\CustomStyles.xaml"></ResourceDictionary>
+                <ResourceDictionary>
+                    <vm:ViewModelLocator x:Key="Locator" /> 
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

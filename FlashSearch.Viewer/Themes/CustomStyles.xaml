@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Theme Adjustments -->
+    <SolidColorBrush x:Key="SplitterBackgroundColor" Color="{StaticResource DarkBackgroundColor}"/>
+    <Style TargetType="{x:Type GridSplitter}">
+        <Setter Property="Background" Value="{StaticResource SplitterBackgroundColor}" />
+    </Style>
+
+    <!-- View Styles -->
+    <Style x:Key="TitleStyle" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0,10,0,0" />
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+    
+    <!-- Matches colors -->
+    <SolidColorBrush x:Key="WordMatchForegroundBrush" Color="#DD9D00" />
+    <SolidColorBrush x:Key="CurrentMatchedLineBackgroundBrush" Color="#333366" />
+    
+</ResourceDictionary>

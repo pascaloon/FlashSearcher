@@ -20,7 +20,7 @@
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" FontSize="10" Margin="2, 1, 2, 2.5" />
+                    <TextBlock Text="{Binding}" FontSize="10" Margin="2, 1, 2, 2.5" Foreground="Gray" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
