@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,10 +32,14 @@ namespace FlashSearch.Viewer.Views
         private void LoadDocument()
         {
             FlowDocument doc = new FlowDocument();
-            doc.PageWidth = 1000;
+            doc.PageWidth = 100.0;
             LineNumbers.Clear();   
             foreach (LineInfo line in _fileService.GetContextLines(FileName, LineNumber, ContextAmount, ContentSelector))
             {
+                double lineWidth = line.Content.Length * 7.0;
+                if (lineWidth > doc.PageWidth)
+                    doc.PageWidth = lineWidth;
+
                 Paragraph p = new Paragraph();
                 p.LineHeight = 1;
 
@@ -49,18 +54,18 @@ namespace FlashSearch.Viewer.Views
                     for (int i = 0; i < positions.Count; i++)
                     {
                         int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
-                        string before = line.Line.Substring(lastIndex, positions[i].Begin - lastIndex);
-                        string match = line.Line.Substring(positions[i].Begin, positions[i].Length);
+                        string before = line.Content.Substring(lastIndex, positions[i].Begin - lastIndex);
+                        string match = line.Content.Substring(positions[i].Begin, positions[i].Length);
                     
                         p.Inlines.Add(new Run(before));
                         p.Inlines.Add(new Bold(new Run(match)) {Foreground = Brushes.Green});
                     }
-                    string after = line.Line.Substring(positions.Last().Begin + positions.Last().Length);
+                    string after = line.Content.Substring(positions.Last().Begin + positions.Last().Length);
                     p.Inlines.Add(after);
                 }
                 else
                 {
-                    p.Inlines.Add(line.Line);
+                    p.Inlines.Add(line.Content);
                 }
                 
                 

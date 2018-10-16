@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=viewModels:ResultPeekViewModel, IsDesignTimeCreatable=False}" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="5, 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

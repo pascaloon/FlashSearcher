@@ -13,14 +13,14 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <ListBox ItemsSource="{Binding LineNumbers}" Focusable="False" >
-            <!-- <ListBox.ItemContainerStyle> -->
-            <!--     <Style TargetType="ContentControl" BasedOn="{StaticResource {x:Type ContentControl}}"> -->
-            <!--         <Setter Property="Focusable" Value="False" /> -->
-            <!--     </Style> -->
-            <!-- </ListBox.ItemContainerStyle> -->
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ContentControl" BasedOn="{StaticResource {x:Type ContentControl}}">
+                    <Setter Property="Focusable" Value="False" />
+                </Style>
+            </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" FontSize="10" Margin="0.75,0" />
+                    <TextBlock Text="{Binding}" FontSize="10" Margin="2, 1, 2, 2.5" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

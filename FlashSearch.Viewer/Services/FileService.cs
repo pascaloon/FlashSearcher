@@ -17,11 +17,11 @@ namespace FlashSearch.Viewer.Services
                 throw new InvalidOperationException($"Given file {path} does not exist.");
 
             int begin = lineNumber - contextLines;
-            if (begin < 0)
-                begin = 0;
+            if (begin < 1)
+                begin = 1;
             
             int end = lineNumber + contextLines;
-            int index = 0;
+            int index = 1;
 
             
             
@@ -43,13 +43,13 @@ namespace FlashSearch.Viewer.Services
 
     public class LineInfo
     {
-        public string Line { get; }
+        public string Content { get; }
         public int LineNumber { get; }
         public IEnumerable<MatchPosition> Matches { get; }
 
-        public LineInfo(string line, int lineNumber, IEnumerable<MatchPosition> matches)
+        public LineInfo(string content, int lineNumber, IEnumerable<MatchPosition> matches)
         {
-            Line = line;
+            Content = content;
             LineNumber = lineNumber;
             Matches = matches;
         }

@@ -36,6 +36,14 @@ namespace FlashSearch.Viewer.ViewModels
             get => _query;
             set => Set(ref _query, value);
         }
+
+        private string _pathQuery;
+
+        public string PathQuery
+        {
+            get => _pathQuery;
+            set => Set(ref _pathQuery, value);
+        }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
 
@@ -53,32 +61,61 @@ namespace FlashSearch.Viewer.ViewModels
 
             }
         }
+
+        private bool _searchInProgress;
+        private FlashSearcher _flashSearcher;
+
+        public bool SearchInProgress
+        {
+            get { return _searchInProgress; }
+            set { Set(ref _searchInProgress, value); }
+        }
         
         public RelayCommand SearchCommand { get; }
+        public RelayCommand CancelSearchCommand { get; }
         
         public SearchViewModel()
         {
             Results = new ObservableCollection<SearchResultViewModel>();
             SearchCommand = new RelayCommand(Search, CanSearch);
+            CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
+            _searchInProgress = false;
+        }
+
+        private bool CanCancelSearch() => SearchInProgress;
+
+        private void CancelSearch()
+        {
+            _flashSearcher.CancelSearch();
         }
 
         private void Search()
         {
             _currentContentSelector = new RegexContentSelector(Query);
+            SearchInProgress = true;
+            _flashSearcher = new FlashSearcher();
             Results.Clear();
             Task.Run(() =>
             {
-                FlashSearcher flashSearcher = new FlashSearcher();
-                foreach (SearchResult result in flashSearcher.SearchContentInFolder(RootPath, new AnyFileSelector(), _currentContentSelector))
+                IFileSelector fileSelector = String.IsNullOrWhiteSpace(PathQuery)
+                    ? (IFileSelector) new ExtensionFileSelector()
+                    : (IFileSelector) new QueryAndExtensionFileSelector(PathQuery);
+                foreach (SearchResult result in _flashSearcher.SearchContentInFolder(RootPath, fileSelector, _currentContentSelector))
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>
                     {
                         Results.Add(new SearchResultViewModel(result));
                     });
                 }
+                
+                DispatcherHelper.UIDispatcher.Invoke(() =>
+                {
+                    SearchInProgress = false;
+                });
+
             });
         }
 
-        private bool CanSearch() => !String.IsNullOrWhiteSpace(RootPath) && !String.IsNullOrWhiteSpace(Query);
+        private bool CanSearch() => !String.IsNullOrWhiteSpace(RootPath) && !String.IsNullOrWhiteSpace(Query) && !SearchInProgress;
     }
 }

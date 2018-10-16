@@ -4,9 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:FlashSearch.Viewer.Views"
+             xmlns:converters="clr-namespace:FlashSearch.Viewer.Converters"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              DataContext="{Binding Source={StaticResource Locator}, Path=SearchViewModel}">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="5, 1" />
+        </Style>
+        <converters:CustomBooleanToVisibility x:Key="BooleanToVisibilityConverter" />
+        <converters:CustomInvertedBooleanToVisibility x:Key="InvertedBooleanToVisibility" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,23 +29,31 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0" Text="Root:"/>
-        <TextBox Grid.Row="1" Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:"/>
+            <TextBox Grid.Row="1" Grid.Column="0"  Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="FileName:"/>
+            <TextBox Grid.Row="1" Grid.Column="2"  Text="{Binding PathQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        
         
         <TextBlock Grid.Row="2" Text="Query:"/>
         <TextBox Grid.Row="3" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-        <Grid Grid.Row="4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="auto" MinWidth="100" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" />
-        </Grid>
+        <Button Grid.Row="4" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
+        <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
 
         <TextBlock Grid.Row="5" Text="Results:"/>
-        <DataGrid Grid.Row="6" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid Grid.Row="6" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File" Binding="{Binding File}" SortDirection="Ascending" />
                 <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" />

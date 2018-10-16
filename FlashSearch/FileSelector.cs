@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -28,7 +29,7 @@ namespace FlashSearch
         
         public ExtensionFileSelector()
         {
-            _excludedExtensions = new[] {".exe", ".pdb", ".dll", ".db", ".idb", ".obj", ".uasset", ".ipch", ".cache"};
+            _excludedExtensions = new[] {".exe", ".pdb", ".dll", ".db", ".idb", ".obj", ".uasset", ".ipch", ".cache", ".zip", ".rar", ".7z"};
         }
 
         protected override bool IsQueryMatching(FileInfo file) => true;
@@ -41,10 +42,16 @@ namespace FlashSearch
 
         public QueryFileSelector(string query)
         {
-            _regex = new Regex(query, RegexOptions.IgnoreCase);
+            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
         
-        protected override bool IsQueryMatching(FileInfo file) => _regex.IsMatch(file.FullName);
+        protected override bool IsQueryMatching(FileInfo file)
+        {
+            if (String.IsNullOrEmpty(file?.FullName))
+                return false;
+            return _regex.IsMatch(file.FullName);
+        }
+
         protected override bool IsExtensionValid(FileInfo file) => true;
     }
     
@@ -54,9 +61,14 @@ namespace FlashSearch
 
         public QueryAndExtensionFileSelector(string query)
         {
-            _regex = new Regex(query, RegexOptions.IgnoreCase);
+            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
         
-        protected override bool IsQueryMatching(FileInfo file) => _regex.IsMatch(file.FullName);
+        protected override bool IsQueryMatching(FileInfo file)
+        {
+            if (String.IsNullOrEmpty(file?.FullName))
+                return false;
+            return _regex.IsMatch(file.FullName);
+        }
     }
 }

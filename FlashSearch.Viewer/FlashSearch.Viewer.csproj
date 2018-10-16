@@ -75,6 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\BooleanToVisibility.cs" />
     <Compile Include="Services\FileService.cs" />
     <Compile Include="Services\GlobalFactory.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />

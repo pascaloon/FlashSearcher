@@ -26,7 +26,7 @@ namespace FlashSearch
         
         public RegexContentSelector(string regex)
         {
-            _regex = new Regex(regex, RegexOptions.IgnoreCase);
+            _regex = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
         
         public IEnumerable<MatchPosition> GetMatches(string line)

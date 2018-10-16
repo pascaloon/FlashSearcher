@@ -33,6 +33,7 @@ namespace FlashSearch
         private bool _completed = false;
 
         private ConcurrentQueue<SearchResult> _results;
+        private CancellationTokenSource _cancellationTokenSource;
         
         public FlashSearcher()
         {
@@ -50,6 +51,7 @@ namespace FlashSearch
                 return Enumerable.Empty<SearchResult>();
             }
             
+            _cancellationTokenSource = new CancellationTokenSource();
             _completed = false;
             Task.Run(() =>
             {
@@ -62,6 +64,9 @@ namespace FlashSearch
 
         private void SearchContentInFolder(DirectoryInfo directory, IFileSelector fileSelector, IContentSelector contentSelector)
         {
+            if (_cancellationTokenSource.IsCancellationRequested)
+                return;
+            
             List<Task> tasks = new List<Task>();
             foreach (DirectoryInfo subDirectory in directory.GetDirectories())
             {
@@ -70,6 +75,9 @@ namespace FlashSearch
 
             foreach (FileInfo file in directory.GetFiles())
             {
+                if (_cancellationTokenSource.IsCancellationRequested)
+                    return;
+                
                 if (!fileSelector.IsFileValid(file))
                     continue;
                 
@@ -91,6 +99,9 @@ namespace FlashSearch
             int lineNumber = 1;
             foreach (string line in File.ReadLines(file.FullName))
             {
+                if (_cancellationTokenSource.IsCancellationRequested)
+                    yield break;
+                
                 List<MatchPosition> matches = contentSelector.GetMatches(line).ToList();
                 
                 if (matches.Count > 0)
@@ -102,6 +113,11 @@ namespace FlashSearch
             }
         }
 
+        public void CancelSearch()
+        {
+            _cancellationTokenSource.Cancel();
+        }
+        
         public IEnumerator<SearchResult> GetEnumerator()
         {
             return this;
