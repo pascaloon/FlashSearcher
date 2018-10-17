@@ -6,7 +6,11 @@
     <Style TargetType="{x:Type GridSplitter}">
         <Setter Property="Background" Value="{StaticResource SplitterBackgroundColor}" />
     </Style>
-
+    <Style TargetType="{x:Type RichTextBox}" BasedOn="{StaticResource {x:Type RichTextBox}}">
+        <Setter Property="BorderThickness" Value="0,0,0,0" />
+    </Style>
+    
+    
     <!-- View Styles -->
     <Style x:Key="TitleStyle" TargetType="{x:Type TextBlock}">
         <Setter Property="FontSize" Value="20" />

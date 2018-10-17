@@ -1,58 +1,43 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Autofac;
 using FlashSearch.Viewer.Services;
 
 namespace FlashSearch.Viewer.Views
 {
     public partial class FilePeeker : UserControl
     {
-        private readonly FileService _fileService;
-        public ObservableCollection<int> LineNumbers { get; set; }
-
-        
         public FilePeeker()
         {
             InitializeComponent();
             LayoutRoot.DataContext = this;
-            _fileService = GlobalFactory.Container.Resolve<FileService>();
-            LineNumbers = new ObservableCollection<int>();
+            _foregroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("ForegroundBrush");
+            _wordMatchForegroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("WordMatchForegroundBrush");
+            _currentMatchedLineBackgroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("CurrentMatchedLineBackgroundBrush");
 
         }
 
-        
-        private void LoadDocument()
+        private void UpdateFileDocument()
         {
             FlowDocument doc = new FlowDocument();
             doc.PageWidth = 100.0;
-            LineNumbers.Clear();
-            
-            SolidColorBrush foregroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("ForegroundBrush");
-            SolidColorBrush wordMatchForegroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("WordMatchForegroundBrush");
-            SolidColorBrush currentMatchedLineBackgroundBrush = (SolidColorBrush) Application.Current.MainWindow.FindResource("CurrentMatchedLineBackgroundBrush");
-            
-            foreach (LineInfo line in _fileService.GetContextLines(FileName, LineNumber, ContextAmount, ContentSelector))
+
+            List<int> LineNumbers = new List<int>();
+
+            foreach (LineInfo line in Lines)
             {
                 double lineWidth = line.Content.Length * 7.0;
+                
                 if (lineWidth > doc.PageWidth)
                     doc.PageWidth = lineWidth;
 
                 Paragraph p = new Paragraph();
                 p.LineHeight = 1;
 
-                if (line.LineNumber == LineNumber)
-                {
-                    p.Background = currentMatchedLineBackgroundBrush;
-                }
-                
                 List<MatchPosition> positions = line.Matches.ToList();
                 if (positions.Count > 0)
                 {
@@ -61,37 +46,62 @@ namespace FlashSearch.Viewer.Views
                         int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
                         string before = line.Content.Substring(lastIndex, positions[i].Begin - lastIndex);
                         string match = line.Content.Substring(positions[i].Begin, positions[i].Length);
-                    
-                        p.Inlines.Add(new Run(before) {Foreground = foregroundBrush});
-                        p.Inlines.Add(new Bold(new Run(match)) {Foreground = wordMatchForegroundBrush});
+
+                        p.Inlines.Add(new Run(before) {Foreground = _foregroundBrush});
+                        p.Inlines.Add(new Bold(new Run(match)) {Foreground = _wordMatchForegroundBrush});
                     }
+
                     string after = line.Content.Substring(positions.Last().Begin + positions.Last().Length);
-                    p.Inlines.Add(new Run(after){Foreground = foregroundBrush});
+                    p.Inlines.Add(new Run(after) {Foreground = _foregroundBrush});
                 }
                 else
                 {
-                    p.Inlines.Add(new Run(line.Content){Foreground = foregroundBrush});
+                    p.Inlines.Add(new Run(line.Content) {Foreground = _foregroundBrush});
                 }
-                
-                
+
+
                 LineNumbers.Add(line.LineNumber);
                 doc.Blocks.Add(p);
-
             }
 
             RTB.Document = doc;
+            LineNumbersListBox.ItemsSource = LineNumbers;
+            FileScrollViewer.UpdateLayout();
+            double progression = LineNumber / (double) doc.Blocks.Count;
+            FileScrollViewer.ScrollToVerticalOffset(
+                (FileContentViewer.ActualHeight * progression) - (FileScrollViewer.ActualHeight / 2.0));
+        }
+
+        void SelectCurrentLine()
+        {
+            if (LineNumber < 1 || LineNumber > RTB.Document.Blocks.Count)
+                return;
+            RTB.Document.Blocks.ElementAt(LineNumber - 1).Background = _currentMatchedLineBackgroundBrush;
         }
 
         #region DependencyProperties
-
-        private static void CustomPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        
+        private static void LineNumberChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var filePeeker = (FilePeeker) d;
-            filePeeker.OnFileCanged();
+            if (filePeeker.LineNumber == 0)
+                return;
+            filePeeker.SelectCurrentLine();
         }
         
+        private static void LinesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var filePeeker = (FilePeeker) d;
+            if (filePeeker.Lines == null)
+                return;
+            filePeeker.UpdateFileDocument();
+            filePeeker.SelectCurrentLine();
+
+        }
+
+        
         public static readonly DependencyProperty FileNameProperty = DependencyProperty.Register(
-            "FileName", typeof(string), typeof(FilePeeker), new PropertyMetadata(default(string), CustomPropertyChanged));
+            "FileName", typeof(string), typeof(FilePeeker), new PropertyMetadata(default(string)));
 
         public string FileName
         {
@@ -100,7 +110,7 @@ namespace FlashSearch.Viewer.Views
         }
 
         public static readonly DependencyProperty LineNumberProperty = DependencyProperty.Register(
-            "LineNumber", typeof(int), typeof(FilePeeker), new PropertyMetadata(default(int), CustomPropertyChanged));
+            "LineNumber", typeof(int), typeof(FilePeeker), new PropertyMetadata(default(int), LineNumberChanged));
 
         public int LineNumber
         {
@@ -108,36 +118,24 @@ namespace FlashSearch.Viewer.Views
             set { SetValue(LineNumberProperty, value); }
         }
 
-        public static readonly DependencyProperty ContextAmountProperty = DependencyProperty.Register(
-            "ContextAmount", typeof(int), typeof(FilePeeker), new PropertyMetadata(default(int), CustomPropertyChanged));
+        public static readonly DependencyProperty LinesProperty = DependencyProperty.Register(
+            "Lines", typeof(IEnumerable<LineInfo>), typeof(FilePeeker), new PropertyMetadata(default(IEnumerable<LineInfo>), LinesChanged));
 
-        public int ContextAmount
+        public IEnumerable<LineInfo> Lines
         {
-            get { return (int) GetValue(ContextAmountProperty); }
-            set { SetValue(ContextAmountProperty, value); }
+            get { return (IEnumerable<LineInfo>) GetValue(LinesProperty); }
+            set { SetValue(LinesProperty, value); }
         }
-
-        public static readonly DependencyProperty ContentSelectorProperty = DependencyProperty.Register(
-            "ContentSelector", typeof(IContentSelector), typeof(FilePeeker), new PropertyMetadata(default(IContentSelector)));
-
-        public IContentSelector ContentSelector
-        {
-            get { return (IContentSelector) GetValue(ContentSelectorProperty); }
-            set { SetValue(ContentSelectorProperty, value); }
-        }
+        
+        private SolidColorBrush _foregroundBrush;
+        private SolidColorBrush _wordMatchForegroundBrush;
+        private SolidColorBrush _currentMatchedLineBackgroundBrush;
         
         #endregion
 
         private void FilePeeker_OnLoaded(object sender, RoutedEventArgs e)
         {
-            LoadDocument();
-        }
-
-        public void OnFileCanged()
-        {
-            if (!this.IsLoaded)
-                return;
-            LoadDocument();
+//            LoadDocumentAsync(FileName);
         }
     }
 }

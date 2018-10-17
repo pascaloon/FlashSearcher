@@ -21,11 +21,11 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="6" />
+            <ColumnDefinition Width="5" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <views:SearchView Grid.Column="0" />
-        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0" />
-        <ContentControl Grid.Column="2" Content="{Binding RightContent}" />
+        <views:SearchView Grid.Column="0" Padding="3" />
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+        <ContentControl Grid.Column="2" Content="{Binding RightContent}" Padding="3" />
     </Grid>
 </Window>

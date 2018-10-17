@@ -8,22 +8,26 @@
              Loaded="FilePeeker_OnLoaded"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid x:Name="LayoutRoot">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <ListBox ItemsSource="{Binding LineNumbers}" Focusable="False" >
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ContentControl" BasedOn="{StaticResource {x:Type ContentControl}}">
-                    <Setter Property="Focusable" Value="False" />
-                </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" FontSize="10" Margin="2, 1, 2, 2.5" Foreground="Gray" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <RichTextBox Grid.Column="1" x:Name="RTB" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" />
+        <ScrollViewer x:Name="FileScrollViewer">
+            <Grid x:Name="FileContentViewer">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ListBox x:Name="LineNumbersListBox" Focusable="False" >
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ContentControl" BasedOn="{StaticResource {x:Type ContentControl}}">
+                            <Setter Property="Focusable" Value="False" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="10" Margin="2, 0.0, 2, 3.4" Foreground="Gray" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <RichTextBox Grid.Column="1" x:Name="RTB" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" />
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </UserControl>

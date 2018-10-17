@@ -1,7 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Documents;
+using FlashSearch.Viewer.Services;
+using FlashSearch.Viewer.Utilities;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Messaging;
@@ -23,6 +28,7 @@ namespace FlashSearch.Viewer.ViewModels
     
     public class SearchViewModel : ViewModelBase
     {
+        private readonly FileService _fileService;
         private string _rootPath = "D:\\Repository\\FlashSearch";
         public string RootPath
         {
@@ -46,7 +52,9 @@ namespace FlashSearch.Viewer.ViewModels
         }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
+        public ObservableCollectionRange<string> RootsHistory { get; private set; }
 
+        
         private RegexContentSelector _currentContentSelector;
         
         private SearchResultViewModel _selectedSearchResultViewModel;
@@ -57,26 +65,34 @@ namespace FlashSearch.Viewer.ViewModels
             set
             {
                 Set(ref _selectedSearchResultViewModel, value);
-                Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, _currentContentSelector));
+                if (_selectedSearchResultViewModel != null)
+                    Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, _currentContentSelector));
 
             }
         }
 
-        private bool _searchInProgress;
         private FlashSearcher _flashSearcher;
 
+        private bool _searchInProgress;
         public bool SearchInProgress
         {
             get { return _searchInProgress; }
-            set { Set(ref _searchInProgress, value); }
+            set
+            {
+                Set(ref _searchInProgress, value);
+                SearchCommand.RaiseCanExecuteChanged();
+                CancelSearchCommand.RaiseCanExecuteChanged();
+            }
         }
         
         public RelayCommand SearchCommand { get; }
         public RelayCommand CancelSearchCommand { get; }
         
-        public SearchViewModel()
+        public SearchViewModel(FileService fileService)
         {
+            _fileService = fileService;
             Results = new ObservableCollection<SearchResultViewModel>();
+            RootsHistory = new ObservableCollectionRange<string>();
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
             _searchInProgress = false;
@@ -86,14 +102,17 @@ namespace FlashSearch.Viewer.ViewModels
 
         private void CancelSearch()
         {
-            _flashSearcher.CancelSearch();
+            // Wait 3s max before force kill.
+            _flashSearcher.CancelSearch(3000);
         }
 
         private void Search()
         {
+            _fileService.InvalidateCache();
             _currentContentSelector = new RegexContentSelector(Query);
             SearchInProgress = true;
             _flashSearcher = new FlashSearcher();
+            SelectedSearchResultViewModel = null;
             Results.Clear();
             Task.Run(() =>
             {
@@ -114,6 +133,11 @@ namespace FlashSearch.Viewer.ViewModels
                 });
 
             });
+            
+            List<string> usedRoots = RootsHistory.ToList();
+            usedRoots.Remove(RootPath);
+            usedRoots.Insert(0, RootPath);
+            RootsHistory.ResetWith(usedRoots.Take(5));
         }
 
         private bool CanSearch() => !String.IsNullOrWhiteSpace(RootPath) && !String.IsNullOrWhiteSpace(Query) && !SearchInProgress;

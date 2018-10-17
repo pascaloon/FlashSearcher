@@ -40,14 +40,19 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:"/>
-            <TextBox Grid.Row="1" Grid.Column="0"  Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <!-- <TextBox Grid.Row="1" Grid.Column="0"  Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" /> -->
+            <ComboBox Grid.Row="1" Grid.Column="0" Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RootsHistory}" IsEditable="True" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="FileName:"/>
             <TextBox Grid.Row="1" Grid.Column="2"  Text="{Binding PathQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
         
         
         <TextBlock Grid.Row="2" Text="Query:"/>
-        <TextBox Grid.Row="3" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox Grid.Row="3" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <TextBox.InputBindings>
+                <KeyBinding Command="{Binding SearchCommand}" Key="Return" />
+            </TextBox.InputBindings>
+        </TextBox>
 
         <Button Grid.Row="4" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
         <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />

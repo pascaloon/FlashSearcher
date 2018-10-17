@@ -8,35 +8,39 @@ namespace FlashSearch.Viewer.Services
 {
     public class FileService
     {
-        public IEnumerable<LineInfo> GetContextLines(string path, int lineNumber, int contextLines, IContentSelector contentSelector)
+        private Dictionary<string, List<LineInfo>> _filesCache;
+
+        public FileService()
         {
-            if (lineNumber < 0 || contextLines < 0)
-                throw new ArgumentException();
+            _filesCache = new Dictionary<string, List<LineInfo>>();
+        }
+        
+        
+        public List<LineInfo> GetMatchesInFile(string path, IContentSelector contentSelector)
+        {
+            if (_filesCache.ContainsKey(path))
+            {
+                return _filesCache[path];
+            }
             
             if (!File.Exists(path))
                 throw new InvalidOperationException($"Given file {path} does not exist.");
-
-            int begin = lineNumber - contextLines;
-            if (begin < 1)
-                begin = 1;
             
-            int end = lineNumber + contextLines;
-            int index = 1;
-
-            
-            
-            foreach (string line in File.ReadLines(path))
+            var lineInfos = new List<LineInfo>();
+            var index = 1;            
+            foreach (string line in File.ReadLines(path).ToList())
             {
-                if (index >= begin)
-                {
-                    yield return new LineInfo(line, index, contentSelector.GetMatches(line).ToList());
-                }
-
+                lineInfos.Add(new LineInfo(line, index, contentSelector.GetMatches(line).ToList()));
                 ++index;
-
-                if (index > end)
-                    yield break;
             }
+
+            _filesCache.Add(path, lineInfos);
+            return lineInfos;
+        }
+
+        public void InvalidateCache()
+        {
+            _filesCache.Clear();
         }
         
     }

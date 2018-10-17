@@ -80,6 +80,7 @@
     <Compile Include="Services\GlobalFactory.cs" />
     <Compile Include="Themes\LeftMarginMultiplierConverter.cs" />
     <Compile Include="Themes\TreeViewItemExtensions.cs" />
+    <Compile Include="Utilities\ObservableCollectionRange.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ResultPeekViewModel.cs" />
     <Compile Include="ViewModels\SearchResultViewModel.cs" />
