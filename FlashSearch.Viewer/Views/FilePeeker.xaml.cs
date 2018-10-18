@@ -74,9 +74,23 @@ namespace FlashSearch.Viewer.Views
 
         void SelectCurrentLine()
         {
-            if (LineNumber < 1 || LineNumber > RTB.Document.Blocks.Count)
+            if (Lines == null || !Lines.Any())
                 return;
-            RTB.Document.Blocks.ElementAt(LineNumber - 1).Background = _currentMatchedLineBackgroundBrush;
+            
+            for (int i = 0; i < Lines.Count(); i++)
+            {
+                if (Lines.ElementAt(i).LineNumber == LineNumber)
+                {
+                    RTB.Document.Blocks.ElementAt(i).Background = _currentMatchedLineBackgroundBrush;
+                    break;
+                }
+                else
+                {
+                    RTB.Document.Blocks.ElementAt(i).Background = null;
+                }
+
+            }
+            
         }
 
         #region DependencyProperties

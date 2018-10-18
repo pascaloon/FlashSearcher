@@ -5,22 +5,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:FlashSearch.Viewer.Views"
              xmlns:viewModels="clr-namespace:FlashSearch.Viewer.ViewModels"
+             xmlns:converters="clr-namespace:FlashSearch.Viewer.Converters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=viewModels:ResultPeekViewModel, IsDesignTimeCreatable=False}" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <converters:CustomBooleanToVisibility x:Key="BooleanToVisibilityConverter" />
+        <converters:CustomInvertedBooleanToVisibility x:Key="InvertedBooleanToVisibility" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        
         <TextBlock Grid.Row="0" Text="Result Peek" Style="{StaticResource TitleStyle}" />
-        <Grid Grid.Row="1" Margin="5, 0">
+        <Grid Grid.Row="1" Margin="5, 0" VerticalAlignment="Center">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
+            
             <TextBox Grid.Row="0" Text="{Binding FileName, Mode=OneWay}" IsReadOnly="True" />
-            <local:FilePeeker Grid.Row="1" FileName="{Binding FileName}" LineNumber="{Binding LineNumber}" Lines="{Binding FileLines}"/>
+            <local:FilePeeker Grid.Row="1" FileName="{Binding FileName}" LineNumber="{Binding LineNumber}" Lines="{Binding FileLines}" />
+            <Button Grid.Row="2" HorizontalAlignment="Stretch" Content="Open" 
+                    Command="{Binding OpenFileCommand}" 
+                    Visibility="{Binding FileOpened, Converter={StaticResource InvertedBooleanToVisibility}}" />
+
         </Grid>
     </Grid>
     

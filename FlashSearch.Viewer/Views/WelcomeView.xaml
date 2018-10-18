@@ -14,7 +14,7 @@
         
         <TextBlock Grid.Row="0" Text="Start a search" Foreground="#FFDC2929" Style="{StaticResource TitleStyle}" />
         
-        <Image Grid.Row="1" Source="/FlashSearch.Viewer;component/Resources/HappyFace.png" Stretch="Uniform"></Image>
+        <!-- <Image Grid.Row="1" Source="/FlashSearch.Viewer;component/Resources/HappyFace.png" Stretch="Uniform"></Image> -->
 
     </Grid>
 </UserControl>
