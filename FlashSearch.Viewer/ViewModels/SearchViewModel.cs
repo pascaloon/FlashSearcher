@@ -29,6 +29,7 @@ namespace FlashSearch.Viewer.ViewModels
     public class SearchViewModel : ViewModelBase
     {
         private readonly FileService _fileService;
+        private readonly SearchConfig _searchConfig;
         private string _rootPath = "D:\\Repository\\FlashSearch";
         public string RootPath
         {
@@ -88,9 +89,10 @@ namespace FlashSearch.Viewer.ViewModels
         public RelayCommand SearchCommand { get; }
         public RelayCommand CancelSearchCommand { get; }
         
-        public SearchViewModel(FileService fileService)
+        public SearchViewModel(FileService fileService, SearchConfig searchConfig)
         {
             _fileService = fileService;
+            _searchConfig = searchConfig;
             Results = new ObservableCollection<SearchResultViewModel>();
             RootsHistory = new ObservableCollectionRange<string>();
             SearchCommand = new RelayCommand(Search, CanSearch);
@@ -117,8 +119,8 @@ namespace FlashSearch.Viewer.ViewModels
             Task.Run(() =>
             {
                 IFileSelector fileSelector = String.IsNullOrWhiteSpace(PathQuery)
-                    ? (IFileSelector) new ExtensionFileSelector()
-                    : (IFileSelector) new QueryAndExtensionFileSelector(PathQuery);
+                    ? (IFileSelector) new ExtensionFileSelector(_searchConfig.ExcludedExtensions)
+                    : (IFileSelector) new QueryAndExtensionFileSelector(PathQuery, _searchConfig.ExcludedExtensions);
                 foreach (SearchResult result in _flashSearcher.SearchContentInFolder(RootPath, fileSelector, _currentContentSelector))
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>

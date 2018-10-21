@@ -32,6 +32,11 @@ namespace FlashSearch
             _excludedExtensions = new[] {".exe", ".pdb", ".dll", ".db", ".idb", ".obj", ".uasset", ".ipch", ".cache", ".zip", ".rar", ".7z"};
         }
 
+        public ExtensionFileSelector(string[] excludedExtensions)
+        {
+            _excludedExtensions = excludedExtensions;
+        }
+
         protected override bool IsQueryMatching(FileInfo file) => true;
         protected override bool IsExtensionValid(FileInfo file) => !_excludedExtensions.Contains(file.Extension.ToLower());
     }
@@ -60,6 +65,12 @@ namespace FlashSearch
         private readonly Regex _regex;
 
         public QueryAndExtensionFileSelector(string query)
+        {
+            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        }
+        
+        public QueryAndExtensionFileSelector(string query, string[] excludedExtensions)
+            : base (excludedExtensions)
         {
             _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }

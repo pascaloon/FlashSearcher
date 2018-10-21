@@ -78,6 +78,7 @@
     <Compile Include="Converters\BooleanToVisibility.cs" />
     <Compile Include="Services\FileService.cs" />
     <Compile Include="Services\GlobalFactory.cs" />
+    <Compile Include="Services\SearchConfig.cs" />
     <Compile Include="Themes\LeftMarginMultiplierConverter.cs" />
     <Compile Include="Themes\TreeViewItemExtensions.cs" />
     <Compile Include="Utilities\ObservableCollectionRange.cs" />
