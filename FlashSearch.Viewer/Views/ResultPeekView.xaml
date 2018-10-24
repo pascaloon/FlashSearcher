@@ -25,6 +25,7 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
             
             <TextBox Grid.Row="0" Text="{Binding FileName, Mode=OneWay}" IsReadOnly="True" />
@@ -32,6 +33,8 @@
             <Button Grid.Row="2" HorizontalAlignment="Stretch" Content="Open" 
                     Command="{Binding OpenFileCommand}" 
                     Visibility="{Binding FileOpened, Converter={StaticResource InvertedBooleanToVisibility}}" />
+            <Button Grid.Row="3" HorizontalAlignment="Stretch" Content="VS Code" 
+                    Command="{Binding OpenFileInCodeCommand}" />
 
         </Grid>
     </Grid>

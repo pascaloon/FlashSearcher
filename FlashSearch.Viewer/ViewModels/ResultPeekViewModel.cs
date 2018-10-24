@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -30,6 +32,7 @@ namespace FlashSearch.Viewer.ViewModels
             set { Set(ref _fileLines, value); }
         }
 
+        public RelayCommand OpenFileInCodeCommand { get; }
         public RelayCommand OpenFileCommand { get; }
         private bool _fileOpened;
 
@@ -49,6 +52,7 @@ namespace FlashSearch.Viewer.ViewModels
             SearchResult = searchResult;
             ContentSelector = contentSelector;
             OpenFileCommand = new RelayCommand(OpenFile, () => !FileOpened);
+            OpenFileInCodeCommand = new RelayCommand(OpenFileInCode);
 
             _cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() =>
@@ -57,6 +61,26 @@ namespace FlashSearch.Viewer.ViewModels
                 List<LineInfo> lines = _fileService.GetMatchesInFilePeek(FileName, SearchResult.LineNumber, 10, ContentSelector);
                 DispatcherHelper.UIDispatcher.Invoke(() => FileLines = lines);
             }, _cancellationTokenSource.Token);
+        }
+
+        private void OpenFileInCode()
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    Process p = new Process();
+                    p.StartInfo.FileName = "code";
+                    p.StartInfo.Arguments = $"-g {FileName}:{LineNumber}";
+                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    p.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            });
         }
 
         private void OpenFile()
