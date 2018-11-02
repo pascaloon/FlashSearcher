@@ -10,17 +10,31 @@
         <Setter Property="BorderThickness" Value="0,0,0,0" />
     </Style>
     
-    
     <!-- View Styles -->
+    <SolidColorBrush x:Key="WarningTextForegroundBrush" Color="#DD9D00" />
+    <SolidColorBrush x:Key="ErrorTextForegroundBrush" Color="#DDDC2929" />
+    <SolidColorBrush x:Key="TitleTextForegroundBrush" Color="#DDDC2929" />
+
+    <Style x:Key="WarningText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="Foreground" Value="{StaticResource WarningTextForegroundBrush}" />
+    </Style>
+    <Style x:Key="ErrorText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="Foreground" Value="{StaticResource ErrorTextForegroundBrush}" />
+    </Style>
+    <Style x:Key="TitleText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="Foreground" Value="{StaticResource TitleTextForegroundBrush}" />
+    </Style>
+    
     <Style x:Key="TitleStyle" TargetType="{x:Type TextBlock}">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Margin" Value="0,10,0,0" />
         <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{StaticResource TitleTextForegroundBrush}" />
     </Style>
     
     <!-- Matches colors -->
     <SolidColorBrush x:Key="WordMatchForegroundBrush" Color="#DD9D00" />
-    <SolidColorBrush x:Key="CurrentMatchedLineBackgroundBrush" Color="#333366" />
+    <SolidColorBrush x:Key="CurrentMatchedLineBackgroundBrush" Color="#333366" />    
     
 </ResourceDictionary>

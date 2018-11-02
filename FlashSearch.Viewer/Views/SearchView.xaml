@@ -17,9 +17,11 @@
         </Style>
         <converters:CustomBooleanToVisibility x:Key="BooleanToVisibilityConverter" />
         <converters:CustomInvertedBooleanToVisibility x:Key="InvertedBooleanToVisibility" />
+        <converters:StringContentToVisibility x:Key="StringContentToVisibility" />
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -40,7 +42,6 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:"/>
-            <!-- <TextBox Grid.Row="1" Grid.Column="0"  Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" /> -->
             <ComboBox Grid.Row="1" Grid.Column="0" Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RootsHistory}" IsEditable="True" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="FileName:"/>
             <TextBox Grid.Row="1" Grid.Column="2"  Text="{Binding PathQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -57,8 +58,9 @@
         <Button Grid.Row="4" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
         <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
 
-        <TextBlock Grid.Row="5" Text="Results:"/>
-        <DataGrid Grid.Row="6" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" >
+        <TextBlock Grid.Row="5" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" Text="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource StringContentToVisibility}}"/>
+        <TextBlock Grid.Row="6" Text="Results:"/>
+        <DataGrid Grid.Row="7" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File" Binding="{Binding File}" SortDirection="Ascending" />
                 <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" />

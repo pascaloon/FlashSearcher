@@ -45,16 +45,21 @@ namespace FlashSearch.Viewer.ViewModels
         }
 
         private string _pathQuery;
-
         public string PathQuery
         {
             get => _pathQuery;
             set => Set(ref _pathQuery, value);
         }
+
+        private string _warning = String.Empty;
+        public string Warning
+        {
+            get => _warning;
+            set => Set(ref _warning, value);
+        }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
         public ObservableCollectionRange<string> RootsHistory { get; private set; }
-
         
         private RegexContentSelector _currentContentSelector;
         
@@ -110,17 +115,38 @@ namespace FlashSearch.Viewer.ViewModels
 
         private void Search()
         {
+            RegexContentSelector newContentSelector;
+            try
+            {
+                newContentSelector = new RegexContentSelector(Query);
+            }
+            catch (Exception)
+            {
+                Warning = "Content Query: Invalid Regular Expression";
+                return;
+            }
+
+            IFileSelector fileSelector;
+            try
+            {
+                fileSelector = String.IsNullOrWhiteSpace(PathQuery)
+                    ? new ExtensionFileSelector(_searchConfig.ExcludedExtensions)
+                    : new QueryAndExtensionFileSelector(PathQuery, _searchConfig.ExcludedExtensions);
+            }
+            catch (Exception)
+            {
+                Warning = "Path Query: Invalid Regular Expression";
+                return;
+            }
+            Warning = String.Empty;
             _fileService.InvalidateCache();
-            _currentContentSelector = new RegexContentSelector(Query);
+            _currentContentSelector = newContentSelector;
             SearchInProgress = true;
             _flashSearcher = new FlashSearcher();
             SelectedSearchResultViewModel = null;
             Results.Clear();
             Task.Run(() =>
             {
-                IFileSelector fileSelector = String.IsNullOrWhiteSpace(PathQuery)
-                    ? (IFileSelector) new ExtensionFileSelector(_searchConfig.ExcludedExtensions)
-                    : (IFileSelector) new QueryAndExtensionFileSelector(PathQuery, _searchConfig.ExcludedExtensions);
                 foreach (SearchResult result in _flashSearcher.SearchContentInFolder(RootPath, fileSelector, _currentContentSelector))
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>
