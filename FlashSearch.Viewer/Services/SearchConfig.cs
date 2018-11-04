@@ -4,16 +4,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace FlashSearch.Viewer.Services
 {
+    public class FileFilter
+    {
+        [XmlElement]
+        public string Name { get; set; }
+
+        [XmlElement]
+        public string Regex { get; set; }
+
+        public FileFilter()
+        {
+            Name = String.Empty;
+            Regex = String.Empty;
+        }
+
+        public override string ToString() => Name;
+    }
+    
     public class SearchConfig
     {
         [XmlElement(ElementName = "ExcludedExtensions")]
         public string ExcludedExtensionsString { get; set; }
 
+        [XmlArrayItem(typeof(FileFilter), ElementName = "FileFilter")]
+        public List<FileFilter> FileFilters;
+        
+        [XmlIgnore]
         private string[] _excludedExtensions;
+        
+        [XmlIgnore]
         public string[] ExcludedExtensions
         {
             get
@@ -26,13 +50,25 @@ namespace FlashSearch.Viewer.Services
                 return _excludedExtensions;
             }
         }
-        
+
 
         public SearchConfig()
         {
-            ExcludedExtensionsString = ".exe, .pdb, .dll, .db, .idb, .obj, .uasset, .ipch, .cache, .zip, .rar, .7z";
+            ExcludedExtensionsString = String.Empty;
+            FileFilters = new List<FileFilter>();
             _excludedExtensions = new string[] { };
         }
+
+        static SearchConfig Default => new SearchConfig()
+        {
+            ExcludedExtensionsString = ".exe, .pdb, .dll, .db, .idb, .obj, .uasset, .ipch, .cache, .zip, .rar, .7z",
+            FileFilters = new List<FileFilter>()
+            {
+                new FileFilter() { Name = "C#", Regex = @"\.(cs)$" },
+                new FileFilter() { Name = "C++", Regex = @"\.(c|cpp|h|hpp)$" },
+                new FileFilter() { Name = "Data", Regex = @"\.(xml|json)$" },
+            }
+        };
 
         public void Save()
         {
@@ -61,7 +97,7 @@ namespace FlashSearch.Viewer.Services
             // If the config path doesn't exist, then we return an instance of the default config.
             if (!File.Exists(configPath))
             {
-                var searchConfig = new SearchConfig();
+                var searchConfig = SearchConfig.Default;
                 searchConfig.Save();
                 return searchConfig;
             }

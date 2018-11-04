@@ -7,6 +7,17 @@ namespace FlashSearch.Viewer.Utilities
     public class ObservableCollectionRange<T> : ObservableCollection<T>
     {
         private bool _deferNotification = false;
+
+        public ObservableCollectionRange()
+        {
+            
+        }
+
+        public ObservableCollectionRange(IEnumerable<T> init)
+            : base(init)
+        {
+            
+        }
         
         public void AddRange(IEnumerable<T> range)
         {

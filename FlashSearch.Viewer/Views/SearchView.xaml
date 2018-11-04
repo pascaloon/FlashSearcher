@@ -44,9 +44,19 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:"/>
             <ComboBox Grid.Row="1" Grid.Column="0" Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RootsHistory}" IsEditable="True" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="FileName:"/>
-            <TextBox Grid.Row="1" Grid.Column="2"  Text="{Binding PathQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Grid Grid.Row="1" Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="25" />
+                </Grid.ColumnDefinitions>
+                <ComboBox Grid.Row="0" Text="{Binding SelectedFileFilterName, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedFileFilter}" ItemsSource="{Binding FileFilters}" IsEditable="True" />
+                <TextBox Grid.Column="1" Text="{Binding SelectedFileFilterRegex, UpdateSourceTrigger=PropertyChanged}" Margin="0" />
+                <Button Grid.Column="2" Command="{Binding SaveFileFilterCommand}">
+                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" />
+                </Button>
+            </Grid>
         </Grid>
-        
         
         <TextBlock Grid.Row="2" Text="Query:"/>
         <TextBox Grid.Row="3" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">

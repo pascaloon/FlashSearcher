@@ -30,7 +30,12 @@ namespace FlashSearch.Viewer.ViewModels
     {
         private readonly FileService _fileService;
         private readonly SearchConfig _searchConfig;
+        
+        private FlashSearcher _flashSearcher;
+        private RegexContentSelector _currentContentSelector;
+        
         private string _rootPath = "D:\\Repository\\FlashSearch";
+        
         public string RootPath
         {
             get => _rootPath;
@@ -44,27 +49,39 @@ namespace FlashSearch.Viewer.ViewModels
             set => Set(ref _query, value);
         }
 
-        private string _pathQuery;
-        public string PathQuery
-        {
-            get => _pathQuery;
-            set => Set(ref _pathQuery, value);
-        }
-
         private string _warning = String.Empty;
         public string Warning
         {
             get => _warning;
             set => Set(ref _warning, value);
         }
-        
-        public ObservableCollection<SearchResultViewModel> Results { get; private set; }
-        public ObservableCollectionRange<string> RootsHistory { get; private set; }
-        
-        private RegexContentSelector _currentContentSelector;
-        
-        private SearchResultViewModel _selectedSearchResultViewModel;
 
+        private FileFilter _selectedFileFilter;
+        public FileFilter SelectedFileFilter
+        {
+            get { return _selectedFileFilter; }
+            set
+            {
+                Set(ref _selectedFileFilter, value);
+                SelectedFileFilterRegex = _selectedFileFilter?.Regex ?? String.Empty;
+            }
+        }
+
+        private string _selectedFileFilterRegex;
+        public string SelectedFileFilterRegex
+        {
+            get { return _selectedFileFilterRegex; }
+            set { Set(ref _selectedFileFilterRegex, value); }
+        }
+
+        private string _selectedFileFilterName;
+        public string SelectedFileFilterName
+        {
+            get { return _selectedFileFilterName; }
+            set { Set(ref _selectedFileFilterName, value); }
+        }
+
+        private SearchResultViewModel _selectedSearchResultViewModel;
         public SearchResultViewModel SelectedSearchResultViewModel
         {
             get { return _selectedSearchResultViewModel; }
@@ -76,9 +93,7 @@ namespace FlashSearch.Viewer.ViewModels
 
             }
         }
-
-        private FlashSearcher _flashSearcher;
-
+        
         private bool _searchInProgress;
         public bool SearchInProgress
         {
@@ -91,18 +106,57 @@ namespace FlashSearch.Viewer.ViewModels
             }
         }
         
+        public ObservableCollection<SearchResultViewModel> Results { get; private set; }
+        public ObservableCollectionRange<string> RootsHistory { get; private set; }
+        public ObservableCollectionRange<FileFilter> FileFilters { get; private set; }
+        
         public RelayCommand SearchCommand { get; }
         public RelayCommand CancelSearchCommand { get; }
+        public RelayCommand SaveFileFilterCommand { get; }
         
         public SearchViewModel(FileService fileService, SearchConfig searchConfig)
         {
             _fileService = fileService;
             _searchConfig = searchConfig;
+            _searchInProgress = false;
+
             Results = new ObservableCollection<SearchResultViewModel>();
             RootsHistory = new ObservableCollectionRange<string>();
+            FileFilters = new ObservableCollectionRange<FileFilter>(_searchConfig.FileFilters);
+            
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
-            _searchInProgress = false;
+            SaveFileFilterCommand = new RelayCommand(SaveFileFilter, CanSaveFileFilter);
+        }
+
+        private bool CanSaveFileFilter()
+        {
+            return !String.IsNullOrWhiteSpace(_selectedFileFilterName);
+        }
+
+        private void SaveFileFilter()
+        {
+            FileFilter filter = _searchConfig.FileFilters.FirstOrDefault(f => f.Name == _selectedFileFilterName);
+            if (filter == null && !String.IsNullOrEmpty(_selectedFileFilterRegex))
+            {
+                filter = new FileFilter()
+                {
+                    Name = _selectedFileFilterName, 
+                    Regex = _selectedFileFilterRegex
+                };
+                _searchConfig.FileFilters.Add(filter);
+                FileFilters.Add(filter);
+            }
+            else if (!String.IsNullOrEmpty(_selectedFileFilterRegex))
+            {
+                filter.Regex = _selectedFileFilterRegex;
+            }
+            else
+            {
+                _searchConfig.FileFilters.Remove(filter);
+                FileFilters.Remove(filter);
+            }
+            _searchConfig.Save();
         }
 
         private bool CanCancelSearch() => SearchInProgress;
@@ -129,15 +183,16 @@ namespace FlashSearch.Viewer.ViewModels
             IFileSelector fileSelector;
             try
             {
-                fileSelector = String.IsNullOrWhiteSpace(PathQuery)
+                fileSelector = String.IsNullOrWhiteSpace(SelectedFileFilterRegex)
                     ? new ExtensionFileSelector(_searchConfig.ExcludedExtensions)
-                    : new QueryAndExtensionFileSelector(PathQuery, _searchConfig.ExcludedExtensions);
+                    : new QueryAndExtensionFileSelector(SelectedFileFilterRegex, _searchConfig.ExcludedExtensions);
             }
             catch (Exception)
             {
                 Warning = "Path Query: Invalid Regular Expression";
                 return;
             }
+            
             Warning = String.Empty;
             _fileService.InvalidateCache();
             _currentContentSelector = newContentSelector;
