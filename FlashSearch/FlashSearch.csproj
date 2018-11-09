@@ -41,6 +41,7 @@
     <Compile Include="ContentSelector.cs" />
     <Compile Include="FileSelector.cs" />
     <Compile Include="FlashSearcher.cs" />
+    <Compile Include="IBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -11,10 +11,10 @@ namespace FlashSearch.Viewer.Services
 {
     public class FileFilter
     {
-        [XmlElement]
+        [XmlAttribute]
         public string Name { get; set; }
 
-        [XmlElement]
+        [XmlAttribute]
         public string Regex { get; set; }
 
         public FileFilter()
@@ -33,6 +33,9 @@ namespace FlashSearch.Viewer.Services
 
         [XmlArrayItem(typeof(FileFilter), ElementName = "FileFilter")]
         public List<FileFilter> FileFilters;
+        
+        [XmlArrayItem(typeof(string), ElementName = "Path")]
+        public List<string> ExcludedPaths;
         
         [XmlIgnore]
         private string[] _excludedExtensions;
@@ -57,6 +60,7 @@ namespace FlashSearch.Viewer.Services
             ExcludedExtensionsString = String.Empty;
             FileFilters = new List<FileFilter>();
             _excludedExtensions = new string[] { };
+            ExcludedPaths = new List<string>();
         }
 
         static SearchConfig Default => new SearchConfig()
@@ -67,7 +71,8 @@ namespace FlashSearch.Viewer.Services
                 new FileFilter() { Name = "C#", Regex = @"\.(cs)$" },
                 new FileFilter() { Name = "C++", Regex = @"\.(c|cpp|h|hpp)$" },
                 new FileFilter() { Name = "Data", Regex = @"\.(xml|json)$" },
-            }
+            },
+            ExcludedPaths = new List<string>() {" "}
         };
 
         public void Save()

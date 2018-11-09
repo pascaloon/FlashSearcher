@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,71 +16,100 @@ namespace FlashSearch
         public bool IsFileValid(FileInfo file) => true;
     }
 
-    public abstract class FileSelector : IFileSelector
+    public class ExtensibleFileSelector : IFileSelector
     {
-        protected abstract bool IsQueryMatching(FileInfo file);
-        protected abstract bool IsExtensionValid(FileInfo file);
-        public bool IsFileValid(FileInfo file) => IsExtensionValid(file) && IsQueryMatching(file);
+        private readonly List<Func<FileInfo, bool>> _predicates
+            = new List<Func<FileInfo, bool>>();
+        
+        internal ExtensibleFileSelector() { }
+        
+        public void AddPredicate(Func<FileInfo, bool> predicate)
+        {
+            _predicates.Add(predicate);
+        }
+        
+        public bool IsFileValid(FileInfo file) => _predicates.All(p => p(file));
+        
+    }
+
+    public class ExtensibleFileSelectorBuilder : 
+        IBuilder<ExtensibleFileSelector>, 
+        ExtensibleFileSelectorBuilder.IExcludedExtensions,
+        ExtensibleFileSelectorBuilder.IExcludedPaths,
+        ExtensibleFileSelectorBuilder.IRegex
+    {
+        public interface IExcludedExtensions
+        {
+            IExcludedPaths WithExcludedExtensions(IEnumerable<string> excludedExtensions);
+            IExcludedPaths WithoutExcludedExtensions();
+        }
+        
+        public interface IExcludedPaths
+        {
+            IRegex WithExcludedPaths(IEnumerable<string> excludedPaths);
+            IRegex WithoutExcludedPaths();
+        }
+        
+        public interface IRegex
+        {
+            IBuilder<ExtensibleFileSelector> WithRegexFilter(string regex);
+            IBuilder<ExtensibleFileSelector> WithoutRegexFilter();
+        }
+
+        private ExtensibleFileSelectorBuilder()
+        {
+            _extensibleFileSelector = new ExtensibleFileSelector();
+        }
+
+        private ExtensibleFileSelector _extensibleFileSelector;
+        public static IExcludedExtensions NewFileSelector()
+        {
+            return new ExtensibleFileSelectorBuilder();
+        }
+
+        public ExtensibleFileSelector Build()
+        {
+            return _extensibleFileSelector;
+        }
+
+        public IExcludedPaths WithExcludedExtensions(IEnumerable<string> excludedExtensions)
+        {
+            _extensibleFileSelector.AddPredicate(f => !excludedExtensions.Contains(f.Extension.ToLower()));
+            return this;
+        }
+
+        public IExcludedPaths WithoutExcludedExtensions()
+        {
+            return this;
+        }
+        
+        public IRegex WithExcludedPaths(IEnumerable<string> excludedPaths)
+        {
+            List<Regex> regexes = excludedPaths
+                .Where(p => !String.IsNullOrWhiteSpace(p))
+                .Select(p => new Regex(p, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                .ToList();
+            _extensibleFileSelector.AddPredicate(f => !regexes.Any(r => r.IsMatch(f.FullName)));
+            return this;
+        }
+
+        public IRegex WithoutExcludedPaths()
+        {
+            return this;
+        }
+        
+        public IBuilder<ExtensibleFileSelector> WithRegexFilter(string regex)
+        {
+            Regex r = new Regex(regex, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            _extensibleFileSelector.AddPredicate(f => r.IsMatch(f.FullName));
+            return this;
+        }
+
+        public IBuilder<ExtensibleFileSelector> WithoutRegexFilter()
+        {
+            return this;
+        }
+
     }
     
-
-    public class ExtensionFileSelector : FileSelector
-    {
-        private readonly string[] _excludedExtensions;
-        
-        public ExtensionFileSelector()
-        {
-            _excludedExtensions = new[] {".exe", ".pdb", ".dll", ".db", ".idb", ".obj", ".uasset", ".ipch", ".cache", ".zip", ".rar", ".7z"};
-        }
-
-        public ExtensionFileSelector(string[] excludedExtensions)
-        {
-            _excludedExtensions = excludedExtensions;
-        }
-
-        protected override bool IsQueryMatching(FileInfo file) => true;
-        protected override bool IsExtensionValid(FileInfo file) => !_excludedExtensions.Contains(file.Extension.ToLower());
-    }
-    
-    public class QueryFileSelector : FileSelector
-    {
-        private readonly Regex _regex;
-
-        public QueryFileSelector(string query)
-        {
-            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        }
-        
-        protected override bool IsQueryMatching(FileInfo file)
-        {
-            if (String.IsNullOrEmpty(file?.FullName))
-                return false;
-            return _regex.IsMatch(file.FullName);
-        }
-
-        protected override bool IsExtensionValid(FileInfo file) => true;
-    }
-    
-    public class QueryAndExtensionFileSelector : ExtensionFileSelector
-    {
-        private readonly Regex _regex;
-
-        public QueryAndExtensionFileSelector(string query)
-        {
-            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        }
-        
-        public QueryAndExtensionFileSelector(string query, string[] excludedExtensions)
-            : base (excludedExtensions)
-        {
-            _regex = new Regex(query, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        }
-        
-        protected override bool IsQueryMatching(FileInfo file)
-        {
-            if (String.IsNullOrEmpty(file?.FullName))
-                return false;
-            return _regex.IsMatch(file.FullName);
-        }
-    }
 }

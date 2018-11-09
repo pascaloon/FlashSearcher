@@ -183,9 +183,12 @@ namespace FlashSearch.Viewer.ViewModels
             IFileSelector fileSelector;
             try
             {
-                fileSelector = String.IsNullOrWhiteSpace(SelectedFileFilterRegex)
-                    ? new ExtensionFileSelector(_searchConfig.ExcludedExtensions)
-                    : new QueryAndExtensionFileSelector(SelectedFileFilterRegex, _searchConfig.ExcludedExtensions);
+                fileSelector =
+                    ExtensibleFileSelectorBuilder.NewFileSelector()
+                        .WithExcludedExtensions(_searchConfig.ExcludedExtensions)
+                        .WithExcludedPaths(_searchConfig.ExcludedPaths)
+                        .WithRegexFilter(SelectedFileFilterRegex)
+                        .Build();
             }
             catch (Exception)
             {
