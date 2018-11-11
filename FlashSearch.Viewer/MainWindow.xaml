@@ -8,7 +8,7 @@
         xmlns:viewModels="clr-namespace:FlashSearch.Viewer.ViewModels"
         mc:Ignorable="d"
         Title="FlashSearch" Height="600" Width="1000"
-        Style="{StaticResource {x:Type Window}}"
+        Style="{StaticResource CustomTitleBar}"
         DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:WelcomeViewModel}">

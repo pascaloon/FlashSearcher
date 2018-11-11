@@ -83,6 +83,7 @@
     <Compile Include="Themes\LeftMarginMultiplierConverter.cs" />
     <Compile Include="Themes\TreeViewItemExtensions.cs" />
     <Compile Include="Utilities\ObservableCollectionRange.cs" />
+    <Compile Include="Utilities\WindowCommands.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ResultPeekViewModel.cs" />
     <Compile Include="ViewModels\SearchResultViewModel.cs" />
@@ -113,6 +114,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Themes\WindowStyle.xaml" />
     <Page Include="Views\FilePeeker.xaml" />
     <Page Include="Views\ResultPeekView.xaml" />
     <Page Include="Views\SearchView.xaml" />
