@@ -127,6 +127,7 @@ namespace FlashSearch.Viewer.ViewModels
             Results = new ObservableCollection<SearchResultViewModel>();
             RootsHistory = new ObservableCollectionRange<string>();
             FileFilters = new ObservableCollectionRange<FileFilter>(_searchConfig.FileFilters);
+            SelectedFileFilter = FileFilters.FirstOrDefault();
             
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
@@ -222,7 +223,7 @@ namespace FlashSearch.Viewer.ViewModels
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>
                     {
-                        Results.Add(new SearchResultViewModel(result));
+                        Results.Add(new SearchResultViewModel(result, RootPath));
                     });
                 }
                 
