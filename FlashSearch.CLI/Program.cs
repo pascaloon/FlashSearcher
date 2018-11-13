@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using FlashSearch.Configuration;
 
 namespace FlashSearch.CLI
 {
@@ -24,7 +25,13 @@ namespace FlashSearch.CLI
             }
             
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-            List<string> defaultExcludedExtensions = new List<string>() {".exe", ".pdb", ".dll", ".db", ".idb", ".obj", ".uasset", ".ipch", ".cache", ".zip", ".rar", ".7z"};
+            
+            var watcher = new ConfigurationWatcher<SearchConfiguration>(
+                GetConfigurationPath(),
+                XMLIO.Load<SearchConfiguration>,
+                XMLIO.Save,
+                () => SearchConfiguration.Default);
+            SearchConfiguration searchConfiguration = watcher.GetConfiguration();
 
             string path = Directory.GetCurrentDirectory();
             var fileSelectorBuilder = ExtensibleFileSelectorBuilder.NewFileSelector();
@@ -35,27 +42,28 @@ namespace FlashSearch.CLI
             {
                 case 1:
                     fileSelector = fileSelectorBuilder
-                        .WithExcludedExtensions(defaultExcludedExtensions)
-                        .WithoutExcludedPaths()
+                        .WithExcludedExtensions(searchConfiguration.ExcludedExtensions)
+                        .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithoutRegexFilter()
                         .Build();
                     queryRegex = args[0];
                     break;
                 case 2:
                     fileSelector = fileSelectorBuilder
-                        .WithExcludedExtensions(defaultExcludedExtensions)
-                        .WithoutExcludedPaths()
+                        .WithExcludedExtensions(searchConfiguration.ExcludedExtensions)
+                        .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithRegexFilter(args[0])
                         .Build();
                     queryRegex = args[1];
                     break;
+                case 3:
                 default:
                     path = Path.IsPathRooted(args[0]) 
                         ? args[0] 
                         : Path.GetFullPath(Path.Combine(path, args[0]));
                     fileSelector = fileSelectorBuilder
-                        .WithExcludedExtensions(defaultExcludedExtensions)
-                        .WithoutExcludedPaths()
+                        .WithExcludedExtensions(searchConfiguration.ExcludedExtensions)
+                        .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithRegexFilter(args[1])
                         .Build();
                     queryRegex = args[2];
@@ -96,6 +104,14 @@ namespace FlashSearch.CLI
         private static void PrintHelp()
         {
             Console.WriteLine("Invalid Arguments. Expected: [ [ PATH ] FILENAME_REGEX ] QUERY_REGEX");
+        }
+        
+        private static string GetConfigurationPath()
+        {
+            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (String.IsNullOrEmpty(directoryName))
+                throw new Exception("Unable to find executable's directory.");
+            return Path.Combine(directoryName, "SearchConfiguration.xml");
         }
     }
 }

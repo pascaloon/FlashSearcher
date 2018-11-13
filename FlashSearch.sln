@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashSearch.CLI", "FlashSea
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashSearch.Viewer", "FlashSearch.Viewer\FlashSearch.Viewer.csproj", "{F2CA071D-6790-41AE-BA39-C8855954C9F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashSearch.Configuration", "FlashSearch.Configuration\FlashSearch.Configuration.csproj", "{BDABC2BA-8A75-41C8-AD6B-7AF514947FCC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{F2CA071D-6790-41AE-BA39-C8855954C9F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2CA071D-6790-41AE-BA39-C8855954C9F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2CA071D-6790-41AE-BA39-C8855954C9F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDABC2BA-8A75-41C8-AD6B-7AF514947FCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDABC2BA-8A75-41C8-AD6B-7AF514947FCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDABC2BA-8A75-41C8-AD6B-7AF514947FCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDABC2BA-8A75-41C8-AD6B-7AF514947FCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

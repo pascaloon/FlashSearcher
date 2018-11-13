@@ -1,13 +1,11 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
-namespace FlashSearch.Viewer.Services
+namespace FlashSearch.Configuration
 {
     public class FileFilter
     {
@@ -26,7 +24,7 @@ namespace FlashSearch.Viewer.Services
         public override string ToString() => Name;
     }
     
-    public class SearchConfig
+    public class SearchConfiguration
     {
         [XmlElement(ElementName = "ExcludedExtensions")]
         public string ExcludedExtensionsString { get; set; }
@@ -55,7 +53,7 @@ namespace FlashSearch.Viewer.Services
         }
 
 
-        public SearchConfig()
+        public SearchConfiguration()
         {
             ExcludedExtensionsString = String.Empty;
             FileFilters = new List<FileFilter>();
@@ -63,7 +61,7 @@ namespace FlashSearch.Viewer.Services
             ExcludedPaths = new List<string>();
         }
 
-        static SearchConfig Default => new SearchConfig()
+        public static SearchConfiguration Default => new SearchConfiguration()
         {
             ExcludedExtensionsString = ".exe, .pdb, .dll, .db, .idb, .obj, .uasset, .ipch, .cache, .zip, .rar, .7z",
             FileFilters = new List<FileFilter>()
@@ -74,49 +72,5 @@ namespace FlashSearch.Viewer.Services
             },
             ExcludedPaths = new List<string>() {" "}
         };
-
-        public void Save()
-        {
-            string configPath = GetConfigPath();
-            using (var writer = new StreamWriter(configPath))
-            {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SearchConfig));
-                xmlSerializer.Serialize(writer, this);
-            }
-        }
-
-
-        public static string GetConfigPath()
-        {
-            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (String.IsNullOrEmpty(directoryName))
-                throw new Exception("Unable to find executable's directory.");
-            return Path.Combine(directoryName, "SearchConfig.xml");
-        }
-        
-        
-        public static SearchConfig Load()
-        {
-            string configPath = GetConfigPath();
-            
-            // If the config path doesn't exist, then we return an instance of the default config.
-            if (!File.Exists(configPath))
-            {
-                var searchConfig = SearchConfig.Default;
-                searchConfig.Save();
-                return searchConfig;
-            }
-            
-            // Else, we parse the existing file.
-            using (var reader = new StreamReader(configPath))
-            {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SearchConfig));
-                SearchConfig config = (SearchConfig) xmlSerializer.Deserialize(reader);
-                if (config == null)
-                    return new SearchConfig();
-                return config;
-            }
-        }
-
     }
 }

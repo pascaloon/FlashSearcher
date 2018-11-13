@@ -79,7 +79,6 @@
     <Compile Include="Converters\StringContentToVisibility.cs" />
     <Compile Include="Services\FileService.cs" />
     <Compile Include="Services\GlobalFactory.cs" />
-    <Compile Include="Services\SearchConfig.cs" />
     <Compile Include="Themes\LeftMarginMultiplierConverter.cs" />
     <Compile Include="Themes\TreeViewItemExtensions.cs" />
     <Compile Include="Utilities\ObservableCollectionRange.cs" />
@@ -139,6 +138,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FlashSearch.Configuration\FlashSearch.Configuration.csproj">
+      <Project>{bdabc2ba-8a75-41c8-ad6b-7af514947fcc}</Project>
+      <Name>FlashSearch.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FlashSearch\FlashSearch.csproj">
       <Project>{b949515c-9fad-49cf-a4ee-270abff24f18}</Project>
       <Name>FlashSearch</Name>

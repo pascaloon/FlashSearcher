@@ -4,6 +4,7 @@ using System.Windows.Input;
 
 namespace FlashSearch.Viewer.Utilities
 {
+#pragma warning disable 67
     public class MinimizeWindowCommand : ICommand
     {
         public bool CanExecute(object parameter)
@@ -35,4 +36,5 @@ namespace FlashSearch.Viewer.Utilities
 
         public event EventHandler CanExecuteChanged;
     }
+#pragma warning restore 67
 }

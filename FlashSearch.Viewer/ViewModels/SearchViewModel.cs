@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using FlashSearch.Configuration;
 using FlashSearch.Viewer.Services;
 using FlashSearch.Viewer.Utilities;
 using GalaSoft.MvvmLight;
@@ -29,7 +30,8 @@ namespace FlashSearch.Viewer.ViewModels
     public class SearchViewModel : ViewModelBase
     {
         private readonly FileService _fileService;
-        private readonly SearchConfig _searchConfig;
+        private SearchConfiguration _searchConfig;
+        private readonly ConfigurationWatcher<SearchConfiguration> _searchConfigWatcher;
         
         private FlashSearcher _flashSearcher;
         private RegexContentSelector _currentContentSelector;
@@ -114,10 +116,12 @@ namespace FlashSearch.Viewer.ViewModels
         public RelayCommand CancelSearchCommand { get; }
         public RelayCommand SaveFileFilterCommand { get; }
         
-        public SearchViewModel(FileService fileService, SearchConfig searchConfig)
+        public SearchViewModel(FileService fileService, ConfigurationWatcher<SearchConfiguration> searchConfigWatcher)
         {
             _fileService = fileService;
-            _searchConfig = searchConfig;
+            _searchConfigWatcher = searchConfigWatcher;
+            _searchConfigWatcher.ConfigurationUpdated += OnConfigurationUpdated;
+            _searchConfig = searchConfigWatcher.GetConfiguration();
             _searchInProgress = false;
 
             Results = new ObservableCollection<SearchResultViewModel>();
@@ -127,6 +131,15 @@ namespace FlashSearch.Viewer.ViewModels
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
             SaveFileFilterCommand = new RelayCommand(SaveFileFilter, CanSaveFileFilter);
+        }
+
+        private void OnConfigurationUpdated(object sender, SearchConfiguration newConfig)
+        {
+            _searchConfig = newConfig;
+            DispatcherHelper.UIDispatcher.Invoke(() =>
+            {
+                FileFilters.ResetWith(_searchConfig.FileFilters);
+            });
         }
 
         private bool CanSaveFileFilter()
@@ -156,7 +169,7 @@ namespace FlashSearch.Viewer.ViewModels
                 _searchConfig.FileFilters.Remove(filter);
                 FileFilters.Remove(filter);
             }
-            _searchConfig.Save();
+            _searchConfigWatcher.UpdateConfiguration(_searchConfig);
         }
 
         private bool CanCancelSearch() => SearchInProgress;
