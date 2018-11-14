@@ -28,7 +28,21 @@
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
             
-            <TextBox Grid.Row="0" Text="{Binding FileName, Mode=OneWay}" IsReadOnly="True" />
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Text="{Binding FileName, Mode=OneWay}" IsReadOnly="True" />
+                <Button Grid.Column="1" Command="{Binding CopyFilePathCommand}">
+                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" />
+                </Button>
+                <Popup IsOpen="{Binding ShowFileCopiedPopup}">
+                    <Border Style="{StaticResource PopupBorder}">
+                        <TextBlock>Path Copied!</TextBlock>
+                    </Border>
+                </Popup> 
+            </Grid>
             <local:FilePeeker Grid.Row="1" FileName="{Binding FileName}" LineNumber="{Binding LineNumber}" Lines="{Binding FileLines}" />
             <Button Grid.Row="2" HorizontalAlignment="Stretch" Content="Open" 
                     Command="{Binding OpenFileCommand}" 

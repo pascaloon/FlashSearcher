@@ -9,6 +9,13 @@
     <Style TargetType="{x:Type RichTextBox}" BasedOn="{StaticResource {x:Type RichTextBox}}">
         <Setter Property="BorderThickness" Value="0,0,0,0" />
     </Style>
+    <Style x:Key="PopupBorder" TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{StaticResource WindowBackgroundBrush}" />
+        <Setter Property="Padding" Value="3,2,3,2" />
+        <Setter Property="BorderThickness" Value="1 1 1 1" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForegroundBrush}" />        
+    </Style>
+    
     
     <!-- View Styles -->
     <SolidColorBrush x:Key="WarningTextForegroundBrush" Color="#DD9D00" />

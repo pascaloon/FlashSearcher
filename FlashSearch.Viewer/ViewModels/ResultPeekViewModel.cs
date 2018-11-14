@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using FlashSearch.Viewer.Services;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -32,8 +33,17 @@ namespace FlashSearch.Viewer.ViewModels
             set { Set(ref _fileLines, value); }
         }
 
+        private bool _showFileCopiedPopup;
+
+        public bool ShowFileCopiedPopup
+        {
+            get { return _showFileCopiedPopup; }
+            set { Set(ref _showFileCopiedPopup, value); }
+        }
+        
         public RelayCommand OpenFileInCodeCommand { get; }
         public RelayCommand OpenFileCommand { get; }
+        public RelayCommand CopyFilePathCommand { get; }
         private bool _fileOpened;
 
         public bool FileOpened
@@ -53,7 +63,8 @@ namespace FlashSearch.Viewer.ViewModels
             ContentSelector = contentSelector;
             OpenFileCommand = new RelayCommand(OpenFile, () => !FileOpened);
             OpenFileInCodeCommand = new RelayCommand(OpenFileInCode);
-
+            CopyFilePathCommand = new RelayCommand(CopyFilePath);
+            
             _cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() =>
             {
@@ -61,6 +72,16 @@ namespace FlashSearch.Viewer.ViewModels
                 List<LineInfo> lines = _fileService.GetMatchesInFilePeek(FileName, SearchResult.LineNumber, 10, ContentSelector);
                 DispatcherHelper.UIDispatcher.Invoke(() => FileLines = lines);
             }, _cancellationTokenSource.Token);
+        }
+
+        private void CopyFilePath()
+        {
+            Clipboard.SetText(SearchResult.FileInfo.FullName);
+            ShowFileCopiedPopup = true;
+
+            Task.Delay(TimeSpan.FromSeconds(2))
+                .ContinueWith((t) => DispatcherHelper.UIDispatcher.Invoke(
+                    () => ShowFileCopiedPopup = false));
         }
 
         private void OpenFileInCode()
