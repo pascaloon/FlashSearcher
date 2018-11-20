@@ -230,6 +230,10 @@ namespace FlashSearch.Viewer.ViewModels
                 DispatcherHelper.UIDispatcher.Invoke(() =>
                 {
                     SearchInProgress = false;
+                    if (Results.Count == 0)
+                    {
+                        Warning = "No Results Found!";
+                    }
                 });
 
             });

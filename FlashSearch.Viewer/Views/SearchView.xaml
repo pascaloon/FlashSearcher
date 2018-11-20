@@ -69,7 +69,10 @@
         <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
 
         <TextBlock Grid.Row="5" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" Text="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource StringContentToVisibility}}"/>
-        <TextBlock Grid.Row="6" Text="Results:"/>
+        <StackPanel Grid.Row="6" Orientation="Horizontal">
+            <TextBlock Text="Results:" Margin="0,0,5,0"/>            
+            <TextBlock Text="{Binding Results.Count}"/>            
+        </StackPanel>
         <DataGrid Grid.Row="7" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File" Binding="{Binding File}" SortDirection="Ascending" />
