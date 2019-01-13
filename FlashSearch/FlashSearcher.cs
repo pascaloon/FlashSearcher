@@ -17,13 +17,15 @@ namespace FlashSearch
         public int LineNumber { get; }
         
         public string LineContent { get; }
+        public long LastIndexTime { get; }
         public IEnumerable<MatchPosition> MatchPositions { get; }
-
-        public SearchResult(FileInfo fileInfo, int lineNumber, string lineContent, IEnumerable<MatchPosition> match)
+        
+        public SearchResult(FileInfo fileInfo, int lineNumber, string lineContent, long lastIndexTime, IEnumerable<MatchPosition> match)
         {
             FileInfo = fileInfo;
             LineNumber = lineNumber;
             LineContent = lineContent;
+            LastIndexTime = lastIndexTime;
             MatchPositions = match;
         }
     }
@@ -111,7 +113,7 @@ namespace FlashSearch
                 
                 if (matches.Count > 0)
                 {
-                    yield return new SearchResult(file, lineNumber, line, matches);
+                    yield return new SearchResult(file, lineNumber, line, file.LastWriteTime.Ticks, matches);
                 }
                 
                 ++lineNumber;

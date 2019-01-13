@@ -66,6 +66,7 @@
             </TextBox.InputBindings>
         </TextBox>
 
+        <CheckBox Grid.Row="4" IsChecked="{Binding UpdateIndex}">Index</CheckBox>
         <Button Grid.Row="4" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
         <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
 

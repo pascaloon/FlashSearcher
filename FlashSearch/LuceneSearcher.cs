@@ -54,9 +54,6 @@ namespace FlashSearch
             if (!Directory.Exists(directoryPath))
                 throw new DirectoryNotFoundException($"Unable to find directory {directoryPath}");
             
-            // TODO: REMOVE
-//            IndexContentInFolder(directoryPath, fileSelector);
-            
             Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
             Searcher searcher = new IndexSearcher(Lucene.Net.Store.FSDirectory.Open(_indexDirectory));
             QueryParser queryParser = new QueryParser(Version.LUCENE_30, "LineContent", analyzer);
@@ -93,6 +90,7 @@ namespace FlashSearch
                         file, 
                         Int32.Parse(doc.GetField("LineNumber").StringValue), 
                         doc.GetField("LineContent").StringValue, 
+                        long.Parse(doc.GetField("LastWrite").StringValue),
                         Enumerable.Empty<MatchPosition>());
                 
                 }
@@ -113,12 +111,14 @@ namespace FlashSearch
                 new StandardAnalyzer(Version.LUCENE_30), 
                 false, 
                 IndexWriter.MaxFieldLength.UNLIMITED))
+            using(Searcher searcher = new IndexSearcher(indexWriter.Directory))
+
             {
-                IndexDirectory(indexWriter, new DirectoryInfo(directoryPath), fileSelector);
+                IndexDirectory(indexWriter, searcher, new DirectoryInfo(directoryPath), fileSelector);
             }
         }
 
-        private void IndexDirectory(IndexWriter indexWriter, DirectoryInfo directory, IFileSelector fileSelector)
+        private void IndexDirectory(IndexWriter indexWriter, Searcher searcher, DirectoryInfo directory, IFileSelector fileSelector)
         {
             if (!fileSelector.IsDirectoryValid(directory))
                 return;
@@ -130,7 +130,7 @@ namespace FlashSearch
                 {
                     if (_cancel)
                         return;
-                    IndexDirectory(indexWriter, childDir, fileSelector);
+                    IndexDirectory(indexWriter, searcher, childDir, fileSelector);
                 }
 
                 foreach (FileInfo file in directory.GetFiles())
@@ -139,7 +139,7 @@ namespace FlashSearch
                         continue;
                     if (_cancel)
                         return;
-                    IndexFile(indexWriter, file);
+                    IndexFile(indexWriter, searcher, file);
                 }
                 
             }
@@ -150,8 +150,18 @@ namespace FlashSearch
             }
         }
 
-        private void IndexFile(IndexWriter indexWriter, FileInfo file)
+        private void IndexFile(IndexWriter indexWriter, Searcher searcher, FileInfo file)
         {
+            long lastWriteTicks = file.LastWriteTime.Ticks;
+            TopDocs topDocs = searcher.Search(new TermQuery(new Term("Path", file.FullName)), Int32.MaxValue);
+            List<long> indexTicks = topDocs.ScoreDocs
+                .Select(scoreDoc => searcher.Doc(scoreDoc.Doc))
+                .Select(doc => long.Parse(doc.GetField("LastWrite").StringValue))
+                .ToList();
+            
+            if (indexTicks.Any() && indexTicks.All(ticks => ticks == lastWriteTicks))
+                return;
+
             indexWriter.DeleteDocuments(new Term("Path", file.FullName));
             int lineNumber = 1;
             foreach (string line in File.ReadLines(file.FullName))
@@ -160,6 +170,7 @@ namespace FlashSearch
                 document.Add(new Field("Path", file.FullName, Field.Store.YES, Field.Index.NOT_ANALYZED));
                 document.Add(new Field("LineNumber", lineNumber.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
                 document.Add(new Field("LineContent", line, Field.Store.YES, Field.Index.ANALYZED));
+                document.Add(new Field("LastWrite", file.LastWriteTime.Ticks.ToString(), Field.Store.YES, Field.Index.ANALYZED));
                 indexWriter.AddDocument(document);
                 ++lineNumber;
             }

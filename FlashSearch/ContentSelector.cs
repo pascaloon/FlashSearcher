@@ -60,6 +60,9 @@ namespace FlashSearch
                     .Replace("\\", "")
                     .Replace(".", "")
                     .Replace("\"", "")
+                    .Replace("AND", "")
+                    .Replace("OR", "")
+                    .Replace("\"", "")
                     .Replace("*", "\\w*");
                 if (String.IsNullOrWhiteSpace(regexString))
                     continue;

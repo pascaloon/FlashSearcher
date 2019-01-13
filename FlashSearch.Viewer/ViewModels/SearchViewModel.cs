@@ -110,6 +110,13 @@ namespace FlashSearch.Viewer.ViewModels
                 CancelSearchCommand.RaiseCanExecuteChanged();
             }
         }
+
+        private bool _updateIndex = true;
+        public bool UpdateIndex
+        {
+            get { return _updateIndex; }
+            set { Set(ref _updateIndex, value); }
+        }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
         public ObservableCollectionRange<string> RootsHistory { get; private set; }
@@ -192,7 +199,7 @@ namespace FlashSearch.Viewer.ViewModels
 //                    _cancellationTokenSource.Cancel();
 //                }
 //            });
-            
+            _luceneSearcher.CancelSearch();
             _cancellationTokenSource.Cancel();
         }
 
@@ -231,6 +238,8 @@ namespace FlashSearch.Viewer.ViewModels
             {
                 try
                 {
+                    _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
                     foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
                         _currentContentSelector))
                     {
@@ -240,43 +249,62 @@ namespace FlashSearch.Viewer.ViewModels
                         });
                     }
 
-                    _luceneSearcher.IndexContentInFolder(RootPath, fileSelector);
-
-
-                    foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
-                        _currentContentSelector))
+                    if (_updateIndex)
                     {
-                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                        _luceneSearcher.IndexContentInFolder(RootPath, fileSelector);
 
-                        SearchResultViewModel alreadyExisting = Results.FirstOrDefault(r =>
-                            r.SearchResult.FileInfo.FullName == result.FileInfo.FullName &&
-                            r.SearchResult.LineNumber == result.LineNumber);
 
-                        if (alreadyExisting != null)
+                        foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
+                            _currentContentSelector))
                         {
-                            alreadyExisting.State = SearchResultState.Unchanged;
-                        }
-                        else
-                        {
-                            DispatcherHelper.UIDispatcher.Invoke(() =>
+
+                            SearchResultViewModel alreadyExisting = Results.FirstOrDefault(r =>
+                                r.SearchResult.FileInfo.FullName == result.FileInfo.FullName &&
+                                r.SearchResult.LineNumber == result.LineNumber);
+
+                            if (alreadyExisting != null)
                             {
-                                var newResult = new SearchResultViewModel(result, RootPath);
-                                newResult.State = SearchResultState.Added;
-                                Results.Add(newResult);
-                            });
+                                alreadyExisting.State = SearchResultState.Unchanged;
+                            }
+                            else
+                            {
+                                DispatcherHelper.UIDispatcher.Invoke(() =>
+                                {
+                                    var newResult = new SearchResultViewModel(result, RootPath);
+                                    newResult.State = SearchResultState.Added;
+                                    Results.Add(newResult);
+                                });
+                            }
                         }
-                    }
 
-                    foreach (SearchResultViewModel result in Results)
-                    {
-                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();
-
-                        if (result.State == SearchResultState.InProgress)
+                        foreach (SearchResultViewModel result in Results)
                         {
-                            result.State = SearchResultState.Removed;
+
+                            if (result.State == SearchResultState.InProgress)
+                            {
+                                result.State = SearchResultState.Removed;
+                            }
                         }
                     }
-
+                    else
+                    {
+                        foreach (SearchResultViewModel result in Results)
+                        {
+                            if (!result.SearchResult.FileInfo.Exists)
+                            {
+                                result.State = SearchResultState.Removed;
+                            }
+                            else if (result.SearchResult.LastIndexTime < result.SearchResult.FileInfo.LastWriteTime.Ticks)
+                            {
+                                result.State = SearchResultState.InProgress;
+                            }
+                            else
+                            {
+                                result.State = SearchResultState.Unchanged;
+                            }
+                        }
+                    }
+                    
                     DispatcherHelper.UIDispatcher.Invoke(() =>
                     {
                         if (Results.Count == 0)
