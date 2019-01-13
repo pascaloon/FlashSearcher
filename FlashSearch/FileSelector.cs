@@ -9,27 +9,37 @@ namespace FlashSearch
     public interface IFileSelector
     {
         bool IsFileValid(FileInfo file);
+        bool IsDirectoryValid(DirectoryInfo directory);
     }
     
     public class AnyFileSelector : IFileSelector
     {
         public bool IsFileValid(FileInfo file) => true;
+        public bool IsDirectoryValid(DirectoryInfo directory) => true;
     }
 
     public class ExtensibleFileSelector : IFileSelector
     {
-        private readonly List<Func<FileInfo, bool>> _predicates
+        private readonly List<Func<FileInfo, bool>> _filePredicates
             = new List<Func<FileInfo, bool>>();
+        
+        private readonly List<Func<DirectoryInfo, bool>> _directoryPredicates
+            = new List<Func<DirectoryInfo, bool>>();
         
         internal ExtensibleFileSelector() { }
         
-        public void AddPredicate(Func<FileInfo, bool> predicate)
+        public void AddFilePredicate(Func<FileInfo, bool> predicate)
         {
-            _predicates.Add(predicate);
+            _filePredicates.Add(predicate);
         }
         
-        public bool IsFileValid(FileInfo file) => _predicates.All(p => p(file));
+        public void AddDirectoryPredicate(Func<DirectoryInfo, bool> predicate)
+        {
+            _directoryPredicates.Add(predicate);
+        }
         
+        public bool IsFileValid(FileInfo file) => _filePredicates.All(p => p(file));
+        public bool IsDirectoryValid(DirectoryInfo directory) => _directoryPredicates.All(p => p(directory));
     }
 
     public class ExtensibleFileSelectorBuilder : 
@@ -74,7 +84,7 @@ namespace FlashSearch
 
         public IExcludedPaths WithExcludedExtensions(IEnumerable<string> excludedExtensions)
         {
-            _extensibleFileSelector.AddPredicate(f => !excludedExtensions.Contains(f.Extension.ToLower()));
+            _extensibleFileSelector.AddFilePredicate(f => !excludedExtensions.Contains(f.Extension.ToLower()));
             return this;
         }
 
@@ -89,7 +99,7 @@ namespace FlashSearch
                 .Where(p => !String.IsNullOrWhiteSpace(p))
                 .Select(p => new Regex(p, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 .ToList();
-            _extensibleFileSelector.AddPredicate(f => !regexes.Any(r => r.IsMatch(f.FullName)));
+            _extensibleFileSelector.AddDirectoryPredicate(f => !regexes.Any(r => r.IsMatch(f.FullName)));
             return this;
         }
 
@@ -101,7 +111,7 @@ namespace FlashSearch
         public IBuilder<ExtensibleFileSelector> WithRegexFilter(string regex)
         {
             Regex r = new Regex(regex, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            _extensibleFileSelector.AddPredicate(f => r.IsMatch(f.FullName));
+            _extensibleFileSelector.AddFilePredicate(f => r.IsMatch(f.FullName));
             return this;
         }
 

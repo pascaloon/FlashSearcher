@@ -44,4 +44,11 @@
     <SolidColorBrush x:Key="WordMatchForegroundBrush" Color="#DD9D00" />
     <SolidColorBrush x:Key="CurrentMatchedLineBackgroundBrush" Color="#333366" />    
     
+    <!-- Results States Colors -->
+    <SolidColorBrush x:Key="InProgress" Color="#DD9D00" />    
+    <SolidColorBrush x:Key="Unchanged" Color="{StaticResource ForegroundColor}" />    
+    <SolidColorBrush x:Key="Added" Color="#1C6617" />    
+    <SolidColorBrush x:Key="Removed" Color="#661B1C" />    
+
+    
 </ResourceDictionary>

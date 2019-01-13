@@ -92,7 +92,7 @@ namespace FlashSearch.Viewer.Services
                     LineInfo lineInfo = file.GetCachedLinfoForLine(index - 1);
                     if (lineInfo == null)
                     {
-                        lineInfo = new LineInfo(line, index, contentSelector.GetMatches(line).ToList());
+                        lineInfo = new LineInfo(line, index, contentSelector.GetMatches(line).OrderBy(l => l.Begin).ToList());
                         file.SetCachedLinfoForLine(index - 1, lineInfo);
                     }
                     

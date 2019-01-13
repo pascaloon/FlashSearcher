@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using FlashSearch.Configuration;
@@ -33,8 +36,8 @@ namespace FlashSearch.Viewer.ViewModels
         private SearchConfiguration _searchConfig;
         private readonly ConfigurationWatcher<SearchConfiguration> _searchConfigWatcher;
         
-        private FlashSearcher _flashSearcher;
-        private RegexContentSelector _currentContentSelector;
+        private LuceneSearcher _luceneSearcher;
+        private LuceneContentSelector _currentContentSelector;
         
         private string _rootPath = "D:\\Repository\\FlashSearch";
         
@@ -175,25 +178,28 @@ namespace FlashSearch.Viewer.ViewModels
 
         private bool CanCancelSearch() => SearchInProgress;
 
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private void CancelSearch()
         {
             // Wait 3s max before force kill.
-            _flashSearcher.CancelSearch(3000);
+            // TODO: ADD CANCEL SUPPORT FOR LUCENE
+//            _luceneSearcher.CancelSearch();
+//            Task.Run(() =>
+//            {
+//                Task.Delay(3000).Wait();
+//                if (_searchInProgress)
+//                {
+//                    _cancellationTokenSource.Cancel();
+//                }
+//            });
+            
+            _cancellationTokenSource.Cancel();
         }
 
         private void Search()
         {
-            RegexContentSelector newContentSelector;
-            try
-            {
-                newContentSelector = new RegexContentSelector(Query);
-            }
-            catch (Exception)
-            {
-                Warning = "Content Query: Invalid Regular Expression";
-                return;
-            }
-
+            _currentContentSelector = new LuceneContentSelector(Query);
+            
             IFileSelector fileSelector;
             try
             {
@@ -212,30 +218,88 @@ namespace FlashSearch.Viewer.ViewModels
             
             Warning = String.Empty;
             _fileService.InvalidateCache();
-            _currentContentSelector = newContentSelector;
             SearchInProgress = true;
-            _flashSearcher = new FlashSearcher();
+            
+            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string indexDirectory = Path.Combine(localDirectory, "index");
+            _luceneSearcher = new LuceneSearcher(indexDirectory);
+            
             SelectedSearchResultViewModel = null;
             Results.Clear();
+            _cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() =>
             {
-                foreach (SearchResult result in _flashSearcher.SearchContentInFolder(RootPath, fileSelector, _currentContentSelector))
+                try
+                {
+                    foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
+                        _currentContentSelector))
+                    {
+                        DispatcherHelper.UIDispatcher.Invoke(() =>
+                        {
+                            Results.Add(new SearchResultViewModel(result, RootPath));
+                        });
+                    }
+
+                    _luceneSearcher.IndexContentInFolder(RootPath, fileSelector);
+
+
+                    foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
+                        _currentContentSelector))
+                    {
+                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                        SearchResultViewModel alreadyExisting = Results.FirstOrDefault(r =>
+                            r.SearchResult.FileInfo.FullName == result.FileInfo.FullName &&
+                            r.SearchResult.LineNumber == result.LineNumber);
+
+                        if (alreadyExisting != null)
+                        {
+                            alreadyExisting.State = SearchResultState.Unchanged;
+                        }
+                        else
+                        {
+                            DispatcherHelper.UIDispatcher.Invoke(() =>
+                            {
+                                var newResult = new SearchResultViewModel(result, RootPath);
+                                newResult.State = SearchResultState.Added;
+                                Results.Add(newResult);
+                            });
+                        }
+                    }
+
+                    foreach (SearchResultViewModel result in Results)
+                    {
+                        _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                        if (result.State == SearchResultState.InProgress)
+                        {
+                            result.State = SearchResultState.Removed;
+                        }
+                    }
+
+                    DispatcherHelper.UIDispatcher.Invoke(() =>
+                    {
+                        if (Results.Count == 0)
+                        {
+                            Warning = "No Results Found!";
+                        }
+                    });
+                }
+                catch (Exception e)
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() =>
                     {
-                        Results.Add(new SearchResultViewModel(result, RootPath));
+                        SearchInProgress = false;
+                        Warning = e.Message;
                     });
                 }
-                
-                DispatcherHelper.UIDispatcher.Invoke(() =>
+                finally
                 {
-                    SearchInProgress = false;
-                    if (Results.Count == 0)
-                    {
-                        Warning = "No Results Found!";
-                    }
-                });
+                    DispatcherHelper.UIDispatcher.Invoke(() => {
+                        SearchInProgress = false;
+                    });
 
+                }
             });
             
             List<string> usedRoots = RootsHistory.ToList();

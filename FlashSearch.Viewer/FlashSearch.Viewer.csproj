@@ -76,6 +76,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\BooleanToVisibility.cs" />
+    <Compile Include="Converters\SearchResultStateToBrush.cs" />
     <Compile Include="Converters\StringContentToVisibility.cs" />
     <Compile Include="Services\FileService.cs" />
     <Compile Include="Services\GlobalFactory.cs" />
