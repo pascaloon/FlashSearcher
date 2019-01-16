@@ -29,6 +29,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
@@ -42,8 +43,8 @@
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Root:"/>
-            <ComboBox Grid.Row="1" Grid.Column="0" Text="{Binding RootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RootsHistory}" IsEditable="True" />
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Project:"/>
+            <ComboBox Grid.Row="1" Grid.Column="0" Text="{Binding SelectedProject.Name}" SelectedItem="{Binding SelectedProject}" ItemsSource="{Binding Projects}" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="FileName:"/>
             <Grid Grid.Row="1" Grid.Column="2">
                 <Grid.ColumnDefinitions>
@@ -71,11 +72,19 @@
         <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
 
         <TextBlock Grid.Row="5" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" Text="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource StringContentToVisibility}}"/>
-        <StackPanel Grid.Row="6" Orientation="Horizontal">
+        
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Visibility="{Binding IndexingInProgress, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock Text="Indexing files: "/>
+            <TextBlock Text="{Binding IndexedFiles}"/>
+            <TextBlock Text="/"/>
+            <TextBlock Text="{Binding TotalFilesFound}"/>
+        </StackPanel>
+        
+        <StackPanel Grid.Row="7" Orientation="Horizontal">
             <TextBlock Text="Results:" Margin="0,0,5,0"/>            
             <TextBlock Text="{Binding Results.Count}"/>            
         </StackPanel>
-        <DataGrid Grid.Row="7" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" LoadingRow="DataGrid_OnLoadingRow" >
+        <DataGrid Grid.Row="8" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" LoadingRow="DataGrid_OnLoadingRow" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File" Binding="{Binding File}" SortDirection="Ascending" />
                 <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" />

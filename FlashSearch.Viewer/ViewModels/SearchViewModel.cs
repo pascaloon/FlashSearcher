@@ -38,13 +38,19 @@ namespace FlashSearch.Viewer.ViewModels
         
         private LuceneSearcher _luceneSearcher;
         private LuceneContentSelector _currentContentSelector;
-        
-        private string _rootPath = "D:\\Repository\\FlashSearch";
-        
-        public string RootPath
+
+        private Project _selectedProject;
+        public Project SelectedProject
         {
-            get => _rootPath;
-            set => Set(ref _rootPath, value);
+            get { return _selectedProject; }
+            set { Set(ref _selectedProject, value); }
+        }
+
+        private ObservableCollectionRange<Project> _projects;
+        public ObservableCollectionRange<Project> Projects
+        {
+            get { return _projects; }
+            set { Set(ref _projects, value); }
         }
         
         private string _query = "FlashSearch";
@@ -98,6 +104,20 @@ namespace FlashSearch.Viewer.ViewModels
 
             }
         }
+
+        private long _indexedFiles;
+        public long IndexedFiles
+        {
+            get { return _indexedFiles; }
+            set { Set(ref _indexedFiles, value); }
+        }
+
+        private long _totalFilesFound;
+        public long TotalFilesFound
+        {
+            get { return _totalFilesFound; }
+            set { Set(ref _totalFilesFound, value); }
+        }
         
         private bool _searchInProgress;
         public bool SearchInProgress
@@ -111,6 +131,13 @@ namespace FlashSearch.Viewer.ViewModels
             }
         }
 
+        private bool _indexingInProgress;
+        public bool IndexingInProgress
+        {
+            get { return _indexingInProgress; }
+            set { Set(ref _indexingInProgress, value); }
+        }
+
         private bool _updateIndex = true;
         public bool UpdateIndex
         {
@@ -119,7 +146,6 @@ namespace FlashSearch.Viewer.ViewModels
         }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
-        public ObservableCollectionRange<string> RootsHistory { get; private set; }
         public ObservableCollectionRange<FileFilter> FileFilters { get; private set; }
         
         public RelayCommand SearchCommand { get; }
@@ -135,9 +161,11 @@ namespace FlashSearch.Viewer.ViewModels
             _searchInProgress = false;
 
             Results = new ObservableCollection<SearchResultViewModel>();
-            RootsHistory = new ObservableCollectionRange<string>();
             FileFilters = new ObservableCollectionRange<FileFilter>(_searchConfig.FileFilters);
             SelectedFileFilter = FileFilters.FirstOrDefault();
+            
+            Projects = new ObservableCollectionRange<Project>(_searchConfig.Projects);
+            SelectedProject = Projects.FirstOrDefault();
             
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
@@ -150,6 +178,10 @@ namespace FlashSearch.Viewer.ViewModels
             DispatcherHelper.UIDispatcher.Invoke(() =>
             {
                 FileFilters.ResetWith(_searchConfig.FileFilters);
+                SelectedFileFilter = FileFilters.FirstOrDefault();
+                
+                Projects.ResetWith(_searchConfig.Projects);
+                SelectedProject = Projects.FirstOrDefault();
             });
         }
 
@@ -228,7 +260,7 @@ namespace FlashSearch.Viewer.ViewModels
             SearchInProgress = true;
             
             string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string indexDirectory = Path.Combine(localDirectory, "index");
+            string indexDirectory = Path.Combine(localDirectory, "Indexes", SelectedProject.Name, SelectedFileFilter.Index);
             _luceneSearcher = new LuceneSearcher(indexDirectory);
             
             SelectedSearchResultViewModel = null;
@@ -240,21 +272,23 @@ namespace FlashSearch.Viewer.ViewModels
                 {
                     _cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
-                    foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
+                    foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
                         _currentContentSelector))
                     {
                         DispatcherHelper.UIDispatcher.Invoke(() =>
                         {
-                            Results.Add(new SearchResultViewModel(result, RootPath));
+                            Results.Add(new SearchResultViewModel(result, SelectedProject.Path));
                         });
                     }
 
                     if (_updateIndex)
                     {
-                        _luceneSearcher.IndexContentInFolder(RootPath, fileSelector);
+                        DispatcherHelper.UIDispatcher.Invoke(() => { IndexingInProgress = true; });
+                        
+                        _luceneSearcher.IndexContentInFolder(SelectedProject.Path, fileSelector);
 
 
-                        foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(RootPath, fileSelector,
+                        foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
                             _currentContentSelector))
                         {
 
@@ -270,7 +304,7 @@ namespace FlashSearch.Viewer.ViewModels
                             {
                                 DispatcherHelper.UIDispatcher.Invoke(() =>
                                 {
-                                    var newResult = new SearchResultViewModel(result, RootPath);
+                                    var newResult = new SearchResultViewModel(result, SelectedProject.Path);
                                     newResult.State = SearchResultState.Added;
                                     Results.Add(newResult);
                                 });
@@ -285,6 +319,8 @@ namespace FlashSearch.Viewer.ViewModels
                                 result.State = SearchResultState.Removed;
                             }
                         }
+                        
+                        DispatcherHelper.UIDispatcher.Invoke(() => { IndexingInProgress = false; });
                     }
                     else
                     {
@@ -325,17 +361,24 @@ namespace FlashSearch.Viewer.ViewModels
                 {
                     DispatcherHelper.UIDispatcher.Invoke(() => {
                         SearchInProgress = false;
+                        IndexingInProgress = false;
                     });
 
                 }
             });
-            
-            List<string> usedRoots = RootsHistory.ToList();
-            usedRoots.Remove(RootPath);
-            usedRoots.Insert(0, RootPath);
-            RootsHistory.ResetWith(usedRoots.Take(5));
+
+            Task.Run(() =>
+            {
+                while (SearchInProgress)
+                {
+                    IndexedFiles = _luceneSearcher.FilesIndexed;
+                    TotalFilesFound = _luceneSearcher.TotalFilesFound;
+                    Thread.Sleep(100);
+                }
+            });
+
         }
 
-        private bool CanSearch() => !String.IsNullOrWhiteSpace(RootPath) && !String.IsNullOrWhiteSpace(Query) && !SearchInProgress;
+        private bool CanSearch() => SelectedProject != null && !String.IsNullOrWhiteSpace(Query) && !SearchInProgress;
     }
 }
