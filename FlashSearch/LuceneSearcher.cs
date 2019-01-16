@@ -290,14 +290,12 @@ namespace FlashSearch
 
         private void IndexFile(IndexWriter indexWriter, Searcher searcher, FileInfo file)
         {
-            long lastWriteTicks = file.LastWriteTime.Ticks;
             var query = new PhraseQuery();
             query.Add(new Term("Path", file.FullName));
             TopDocs topDocs = searcher.Search(query, Int32.MaxValue);
-            List<long> indexTicks = topDocs.ScoreDocs
+            IEnumerable<long> indexTicks = topDocs.ScoreDocs
                 .Select(scoreDoc => searcher.Doc(scoreDoc.Doc))
-                .Select(doc => long.Parse(doc.GetField("LastWrite").StringValue))
-                .ToList();
+                .Select(doc => long.Parse(doc.GetField("LastWrite").StringValue));
 
             IndexFile(indexWriter, searcher, file, indexTicks.FirstOrDefault());
         }

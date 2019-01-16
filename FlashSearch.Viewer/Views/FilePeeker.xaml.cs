@@ -39,25 +39,34 @@ namespace FlashSearch.Viewer.Views
                 p.LineHeight = 1;
 
                 List<MatchPosition> positions = line.Matches.ToList();
-                if (positions.Count > 0)
+                try
                 {
-                    for (int i = 0; i < positions.Count; i++)
+                    if (positions.Count > 0)
                     {
-                        int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
-                        string before = line.Content.Substring(lastIndex, positions[i].Begin - lastIndex);
-                        string match = line.Content.Substring(positions[i].Begin, positions[i].Length);
+                        for (int i = 0; i < positions.Count; i++)
+                        {
+                            int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
+                            string before = line.Content.Substring(lastIndex, positions[i].Begin - lastIndex);
+                            string match = line.Content.Substring(positions[i].Begin, positions[i].Length);
 
-                        p.Inlines.Add(new Run(before) {Foreground = _foregroundBrush});
-                        p.Inlines.Add(new Bold(new Run(match)) {Foreground = _wordMatchForegroundBrush});
+                            p.Inlines.Add(new Run(before) {Foreground = _foregroundBrush});
+                            p.Inlines.Add(new Bold(new Run(match)) {Foreground = _wordMatchForegroundBrush});
+                        }
+
+                        string after = line.Content.Substring(positions.Last().Begin + positions.Last().Length);
+                        p.Inlines.Add(new Run(after) {Foreground = _foregroundBrush});
                     }
-
-                    string after = line.Content.Substring(positions.Last().Begin + positions.Last().Length);
-                    p.Inlines.Add(new Run(after) {Foreground = _foregroundBrush});
+                    else
+                    {
+                        p.Inlines.Add(new Run(line.Content) {Foreground = _foregroundBrush});
+                    }
                 }
-                else
+                catch (Exception)
                 {
+                    p.Inlines.Clear();
                     p.Inlines.Add(new Run(line.Content) {Foreground = _foregroundBrush});
                 }
+                
 
 
                 LineNumbers.Add(line.LineNumber);
