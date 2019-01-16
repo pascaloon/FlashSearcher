@@ -291,7 +291,6 @@ namespace FlashSearch.Viewer.ViewModels
                         foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
                             _currentContentSelector))
                         {
-
                             SearchResultViewModel alreadyExisting = Results.FirstOrDefault(r =>
                                 r.SearchResult.FileInfo.FullName == result.FileInfo.FullName &&
                                 r.SearchResult.LineNumber == result.LineNumber);

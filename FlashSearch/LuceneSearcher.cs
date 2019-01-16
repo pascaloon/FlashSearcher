@@ -110,6 +110,8 @@ namespace FlashSearch
         }
 
 
+        private bool _ioCompleted = false;
+        
         public void IndexContentInFolder(string directoryPath, IFileSelector fileSelector)
         {
             if (!Directory.Exists(directoryPath))
@@ -119,20 +121,22 @@ namespace FlashSearch
             FilesIndexed = 0;
             TotalFilesFound = 0;
             
+            _ioCompleted = false;
+            CancellationTokenSource cancelIndexingTokenSource = new CancellationTokenSource();
+            CancellationToken cancelIndexingToken = cancelIndexingTokenSource.Token;
+            
             using (IndexWriter indexWriter = new IndexWriter(
                 new SimpleFSDirectory(_indexDirectory), 
                 new StandardAnalyzer(Version.LUCENE_30), 
                 false, 
                 IndexWriter.MaxFieldLength.UNLIMITED))
             using(Searcher searcher = new IndexSearcher(indexWriter.Directory))
-
             {
-                CancellationTokenSource cancelIndexingTokenSource = new CancellationTokenSource();
-                CancellationToken cancelIndexingToken = cancelIndexingTokenSource.Token;
+                
                 Task indexDirectoryTask = Task.Run(() =>
                     {
                         cancelIndexingToken.ThrowIfCancellationRequested();
-                        IndexDirectory(indexWriter, searcher, new DirectoryInfo(directoryPath), fileSelector);
+                        IndexDirectory(new DirectoryInfo(directoryPath), fileSelector);
                     }, cancelIndexingToken);
 
                 HashSet<string> allKnownPaths = new HashSet<string>();
@@ -166,34 +170,92 @@ namespace FlashSearch
                     
                     ++FilesIndexed;
                 }
-                
-                while (_indexableFiles.Any() || !indexDirectoryTask.IsCompleted)
+
+                List<Thread> threads = new List<Thread>();
+                for (int i = 0; i < 5; i++)
+                {
+                    Thread t = new Thread(() => IndexLoop(indexWriter, searcher, allKnownPaths));
+                    t.Start();
+                    threads.Add(t);
+                }
+
+                while (true)
                 {
                     if (_cancel)
                     {
                         cancelIndexingTokenSource.Cancel();
+                        _ioCompleted = true;
+                        break;
+                    }
+
+                    if (indexDirectoryTask.IsCompleted)
+                    {
+                        _ioCompleted = true;
                         break;
                     }
                     
-                    if (_indexableFiles.TryDequeue(out FileInfo r))
-                    {
-                        if (!allKnownPaths.Contains(r.FullName))
-                        {
-                            IndexFile(indexWriter, searcher, r);
-                            ++FilesIndexed;
-                        }
-                    }
-
-                    if (!_indexableFiles.Any())
-                    {
-                        Thread.Sleep(100);
-                    }
-                    
+                    Thread.Sleep(100);
                 }
+                
+                foreach (Thread thread in threads)
+                {
+                    thread.Join();
+                }
+                
+//                while (_indexableFiles.Any() || !indexDirectoryTask.IsCompleted)
+//                {
+//                    if (_cancel)
+//                    {
+//                        cancelIndexingTokenSource.Cancel();
+//                        break;
+//                    }
+//                    
+//                    if (_indexableFiles.TryDequeue(out FileInfo r))
+//                    {
+//                        if (!allKnownPaths.Contains(r.FullName))
+//                        {
+//                            IndexFile(indexWriter, searcher, r);
+//                            ++FilesIndexed;
+//                        }
+//                    }
+//
+//                    if (!_indexableFiles.Any())
+//                    {
+//                        Thread.Sleep(1);
+//                    }
+//                    
+//                }
             }
         }
 
-        private void IndexDirectory(IndexWriter indexWriter, Searcher searcher, DirectoryInfo directory, IFileSelector fileSelector)
+        private void IndexLoop(IndexWriter indexWriter, Searcher searcher, HashSet<String> allKnownPaths)
+        {
+            while (_indexableFiles.Any() || !_ioCompleted)
+            {
+                if (_cancel)
+                {
+                    break;
+                }
+                
+                if (_indexableFiles.TryDequeue(out FileInfo r))
+                {
+                    if (!allKnownPaths.Contains(r.FullName))
+                    {
+                        IndexFile(indexWriter, searcher, r);
+                        ++FilesIndexed;
+                    }
+                }
+
+                if (!_indexableFiles.Any())
+                {
+                    Thread.Sleep(100);
+                }
+                    
+            }
+        }
+        
+
+        private void IndexDirectory(DirectoryInfo directory, IFileSelector fileSelector)
         {
             if (!fileSelector.IsDirectoryValid(directory))
                 return;
@@ -205,7 +267,7 @@ namespace FlashSearch
                 {
                     if (_cancel)
                         return;
-                    IndexDirectory(indexWriter, searcher, childDir, fileSelector);
+                    IndexDirectory(childDir, fileSelector);
                 }
 
                 foreach (FileInfo file in directory.GetFiles())
@@ -214,7 +276,6 @@ namespace FlashSearch
                         continue;
                     if (_cancel)
                         return;
-//                    IndexFile(indexWriter, searcher, file);
                     _indexableFiles.Enqueue(file);
                     ++TotalFilesFound;
                 }
