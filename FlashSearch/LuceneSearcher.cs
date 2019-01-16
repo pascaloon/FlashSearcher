@@ -127,7 +127,13 @@ namespace FlashSearch
             using(Searcher searcher = new IndexSearcher(indexWriter.Directory))
 
             {
-                Task indexDirectoryTask = Task.Run(() => IndexDirectory(indexWriter, searcher, new DirectoryInfo(directoryPath), fileSelector));
+                CancellationTokenSource cancelIndexingTokenSource = new CancellationTokenSource();
+                CancellationToken cancelIndexingToken = cancelIndexingTokenSource.Token;
+                Task indexDirectoryTask = Task.Run(() =>
+                    {
+                        cancelIndexingToken.ThrowIfCancellationRequested();
+                        IndexDirectory(indexWriter, searcher, new DirectoryInfo(directoryPath), fileSelector);
+                    }, cancelIndexingToken);
 
                 HashSet<string> allKnownPaths = new HashSet<string>();
 
@@ -135,6 +141,9 @@ namespace FlashSearch
 
                 foreach (ScoreDoc scoreDoc in allTopDocs.ScoreDocs)
                 {
+                    if (_cancel)
+                        break;
+                    
                     Document doc = searcher.Doc(scoreDoc.Doc);
                     String path = doc.GetField("Path").StringValue;
                     if (allKnownPaths.Contains(path))
@@ -160,6 +169,12 @@ namespace FlashSearch
                 
                 while (_indexableFiles.Any() || !indexDirectoryTask.IsCompleted)
                 {
+                    if (_cancel)
+                    {
+                        cancelIndexingTokenSource.Cancel();
+                        break;
+                    }
+                    
                     if (_indexableFiles.TryDequeue(out FileInfo r))
                     {
                         if (!allKnownPaths.Contains(r.FullName))
