@@ -79,6 +79,8 @@ namespace FlashSearch.Configuration
                 return _excludedExtensions;
             }
         }
+        
+        public long MaxFileSize { get; set; }
 
 
         public SearchConfiguration()
@@ -87,6 +89,7 @@ namespace FlashSearch.Configuration
             FileFilters = new List<FileFilter>();
             _excludedExtensions = new string[] { };
             ExcludedPaths = new List<string>();
+            MaxFileSize = 100000000L; // 100 Mo
         }
 
         public static SearchConfiguration Default => new SearchConfiguration()

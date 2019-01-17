@@ -47,7 +47,8 @@ namespace FlashSearch
         ExtensibleFileSelectorBuilder.IExcludedExtensions,
         ExtensibleFileSelectorBuilder.IExcludedPaths,
         ExtensibleFileSelectorBuilder.IRegex,
-        ExtensibleFileSelectorBuilder.IExclusionRegex
+        ExtensibleFileSelectorBuilder.IExclusionRegex,
+        ExtensibleFileSelectorBuilder.IMaxSize
     {
         public interface IExcludedExtensions
         {
@@ -69,10 +70,16 @@ namespace FlashSearch
         
         public interface IExclusionRegex
         {
-            IBuilder<ExtensibleFileSelector> WithExclusionRegex(string regex);
-            IBuilder<ExtensibleFileSelector> WithoutExclusionRegex();
+            IMaxSize WithExclusionRegex(string regex);
+            IMaxSize WithoutExclusionRegex();
         }
 
+        public interface IMaxSize
+        {
+            IBuilder<ExtensibleFileSelector> WithMaxSize(long size);
+            IBuilder<ExtensibleFileSelector> WithoutMaxSize();
+        }
+        
         private ExtensibleFileSelectorBuilder()
         {
             _extensibleFileSelector = new ExtensibleFileSelector();
@@ -132,7 +139,7 @@ namespace FlashSearch
             return this;
         }
 
-        public IBuilder<ExtensibleFileSelector> WithExclusionRegex(string regex)
+        public IMaxSize WithExclusionRegex(string regex)
         {
             if (!String.IsNullOrWhiteSpace(regex))
             {
@@ -142,7 +149,22 @@ namespace FlashSearch
             return this;
         }
 
-        public IBuilder<ExtensibleFileSelector> WithoutExclusionRegex()
+        public IMaxSize WithoutExclusionRegex()
+        {
+            return this;
+        }
+
+        public IBuilder<ExtensibleFileSelector> WithMaxSize(long size)
+        {
+            if (size > 0)
+            {
+                _extensibleFileSelector.AddFilePredicate(f => f.Length <= size);  
+            }
+
+            return this;
+        }
+
+        public IBuilder<ExtensibleFileSelector> WithoutMaxSize()
         {
             return this;
         }

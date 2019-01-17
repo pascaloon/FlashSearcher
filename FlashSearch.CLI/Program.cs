@@ -46,6 +46,7 @@ namespace FlashSearch.CLI
                         .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithoutRegexFilter()
                         .WithoutExclusionRegex()
+                        .WithoutMaxSize()
                         .Build();
                     queryRegex = args[0];
                     break;
@@ -55,6 +56,7 @@ namespace FlashSearch.CLI
                         .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithRegexFilter(args[0])
                         .WithoutExclusionRegex()
+                        .WithoutMaxSize()
                         .Build();
                     queryRegex = args[1];
                     break;
@@ -68,6 +70,7 @@ namespace FlashSearch.CLI
                         .WithExcludedPaths(searchConfiguration.ExcludedPaths)
                         .WithRegexFilter(args[1])
                         .WithoutExclusionRegex()
+                        .WithoutMaxSize()
                         .Build();
                     queryRegex = args[2];
                     break;

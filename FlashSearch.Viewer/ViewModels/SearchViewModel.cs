@@ -248,6 +248,7 @@ namespace FlashSearch.Viewer.ViewModels
                         .WithExcludedPaths(_searchConfig.ExcludedPaths)
                         .WithRegexFilter(SelectedFileFilterRegex)
                         .WithExclusionRegex(SelectedFileFilter.Exclusion)
+                        .WithMaxSize(_searchConfig.MaxFileSize)
                         .Build();
             }
             catch (Exception)
