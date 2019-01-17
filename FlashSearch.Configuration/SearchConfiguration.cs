@@ -16,6 +16,9 @@ namespace FlashSearch.Configuration
         public string Regex { get; set; }
 
         [XmlAttribute]
+        public string Exclusion { get; set; }
+        
+        [XmlAttribute]
         public string Index { get; set; }
         
         public FileFilter()
@@ -23,6 +26,7 @@ namespace FlashSearch.Configuration
             Name = String.Empty;
             Regex = String.Empty;
             Index = String.Empty;
+            Exclusion = String.Empty;
         }
 
         public override string ToString() => Name;
@@ -90,7 +94,7 @@ namespace FlashSearch.Configuration
             ExcludedExtensionsString = ".exe, .pdb, .dll, .db, .idb, .obj, .uasset, .ipch, .cache, .zip, .rar, .7z",
             FileFilters = new List<FileFilter>()
             {
-                new FileFilter() { Name = "C#", Regex = @"\.(cs)$", Index = "Cs"},
+                new FileFilter() { Name = "C#", Regex = @"\.(cs)$", Index = "Cs", Exclusion = @"\.(g|i\.g|g\.i|i)\.cs$"},
                 new FileFilter() { Name = "C++", Regex = @"\.(c|cpp|h|hpp)$", Index = "Cpp" },
                 new FileFilter() { Name = "Data", Regex = @"\.(xml|json)$", Index = "Data" },
             },

@@ -46,7 +46,8 @@ namespace FlashSearch
         IBuilder<ExtensibleFileSelector>, 
         ExtensibleFileSelectorBuilder.IExcludedExtensions,
         ExtensibleFileSelectorBuilder.IExcludedPaths,
-        ExtensibleFileSelectorBuilder.IRegex
+        ExtensibleFileSelectorBuilder.IRegex,
+        ExtensibleFileSelectorBuilder.IExclusionRegex
     {
         public interface IExcludedExtensions
         {
@@ -62,8 +63,14 @@ namespace FlashSearch
         
         public interface IRegex
         {
-            IBuilder<ExtensibleFileSelector> WithRegexFilter(string regex);
-            IBuilder<ExtensibleFileSelector> WithoutRegexFilter();
+            IExclusionRegex WithRegexFilter(string regex);
+            IExclusionRegex WithoutRegexFilter();
+        }
+        
+        public interface IExclusionRegex
+        {
+            IBuilder<ExtensibleFileSelector> WithExclusionRegex(string regex);
+            IBuilder<ExtensibleFileSelector> WithoutExclusionRegex();
         }
 
         private ExtensibleFileSelectorBuilder()
@@ -108,18 +115,37 @@ namespace FlashSearch
             return this;
         }
         
-        public IBuilder<ExtensibleFileSelector> WithRegexFilter(string regex)
+        public IExclusionRegex WithRegexFilter(string regex)
         {
+            if (String.IsNullOrWhiteSpace(regex))
+            {
+                _extensibleFileSelector.AddFilePredicate(_ => true);
+                return this;
+            }
             Regex r = new Regex(regex, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             _extensibleFileSelector.AddFilePredicate(f => r.IsMatch(f.FullName));
             return this;
         }
 
-        public IBuilder<ExtensibleFileSelector> WithoutRegexFilter()
+        public IExclusionRegex WithoutRegexFilter()
         {
             return this;
         }
 
+        public IBuilder<ExtensibleFileSelector> WithExclusionRegex(string regex)
+        {
+            if (!String.IsNullOrWhiteSpace(regex))
+            {
+                Regex r = new Regex(regex, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                _extensibleFileSelector.AddFilePredicate(f => !r.IsMatch(f.FullName));    
+            }
+            return this;
+        }
+
+        public IBuilder<ExtensibleFileSelector> WithoutExclusionRegex()
+        {
+            return this;
+        }
     }
     
 }
