@@ -21,6 +21,8 @@ namespace FlashSearch
 {   
     public class LuceneSearcher
     {
+        public static int MaxSearchResults = 10000; 
+        
         private readonly DirectoryInfo _indexDirectory;
 
         private ConcurrentQueue<FileInfo> _indexableFiles;
@@ -67,7 +69,7 @@ namespace FlashSearch
             QueryParser queryParser = new QueryParser(Version.LUCENE_30, "LineContent", analyzer);
             queryParser.AllowLeadingWildcard = true;
             Query query = queryParser.Parse(luceneQuery.LuceneQuery);
-            TopDocs docs = searcher.Search(query, Int32.MaxValue);
+            TopDocs docs = searcher.Search(query, MaxSearchResults);
             
             using (IndexWriter indexWriter = new IndexWriter(
                 new SimpleFSDirectory(_indexDirectory), 
@@ -141,8 +143,7 @@ namespace FlashSearch
 
                 HashSet<string> allKnownPaths = new HashSet<string>();
 
-                TopDocs allTopDocs = searcher.Search(new MatchAllDocsQuery(), Int32.MaxValue);
-
+                TopDocs allTopDocs = searcher.Search(new MatchAllDocsQuery(), MaxSearchResults);
                 foreach (ScoreDoc scoreDoc in allTopDocs.ScoreDocs)
                 {
                     if (_cancel)
@@ -171,8 +172,13 @@ namespace FlashSearch
                     ++FilesIndexed;
                 }
 
+                // How many indexers to spawn at first
+                int initialIndexersCount = 2;
+                // How much files must be queued before spawning help.
+                int indexersScalingFactor = 500;
+                
                 List<Thread> threads = new List<Thread>();
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < initialIndexersCount; i++)
                 {
                     Thread t = new Thread(() => IndexLoop(indexWriter, searcher, allKnownPaths));
                     t.Start();
@@ -193,6 +199,13 @@ namespace FlashSearch
                         _ioCompleted = true;
                         break;
                     }
+
+                    if (_indexableFiles.Count / threads.Count >= indexersScalingFactor)
+                    {
+                        Thread t = new Thread(() => IndexLoop(indexWriter, searcher, allKnownPaths));
+                        t.Start();
+                        threads.Add(t);
+                    }
                     
                     Thread.Sleep(100);
                 }
@@ -201,30 +214,6 @@ namespace FlashSearch
                 {
                     thread.Join();
                 }
-                
-//                while (_indexableFiles.Any() || !indexDirectoryTask.IsCompleted)
-//                {
-//                    if (_cancel)
-//                    {
-//                        cancelIndexingTokenSource.Cancel();
-//                        break;
-//                    }
-//                    
-//                    if (_indexableFiles.TryDequeue(out FileInfo r))
-//                    {
-//                        if (!allKnownPaths.Contains(r.FullName))
-//                        {
-//                            IndexFile(indexWriter, searcher, r);
-//                            ++FilesIndexed;
-//                        }
-//                    }
-//
-//                    if (!_indexableFiles.Any())
-//                    {
-//                        Thread.Sleep(1);
-//                    }
-//                    
-//                }
             }
         }
 
@@ -244,6 +233,10 @@ namespace FlashSearch
                         IndexFile(indexWriter, searcher, r);
                         ++FilesIndexed;
                     }
+                }
+                else
+                {
+                    Thread.Sleep(1);
                 }
 
                 if (!_indexableFiles.Any())
@@ -292,7 +285,7 @@ namespace FlashSearch
         {
             var query = new PhraseQuery();
             query.Add(new Term("Path", file.FullName));
-            TopDocs topDocs = searcher.Search(query, Int32.MaxValue);
+            TopDocs topDocs = searcher.Search(query, 1);
             IEnumerable<long> indexTicks = topDocs.ScoreDocs
                 .Select(scoreDoc => searcher.Doc(scoreDoc.Doc))
                 .Select(doc => long.Parse(doc.GetField("LastWrite").StringValue));

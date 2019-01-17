@@ -84,7 +84,19 @@
         
         <StackPanel Grid.Row="7" Orientation="Horizontal">
             <TextBlock Text="Results:" Margin="0,0,5,0"/>            
-            <TextBlock Text="{Binding Results.Count}"/>            
+            <TextBlock Text="{Binding Results.Count}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=MaxResultsCount,UpdateSourceTrigger=PropertyChanged}"
+                                         Value="True">
+                                <Setter Property="Foreground"
+                                        Value="Red" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </StackPanel>
         <DataGrid Grid.Row="8" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" LoadingRow="DataGrid_OnLoadingRow" >
             <DataGrid.Columns>

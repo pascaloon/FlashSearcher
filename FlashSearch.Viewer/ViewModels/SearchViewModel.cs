@@ -138,6 +138,14 @@ namespace FlashSearch.Viewer.ViewModels
             set { Set(ref _indexingInProgress, value); }
         }
 
+        private bool _maxResultsCount;
+
+        public bool MaxResultsCount
+        {
+            get { return _maxResultsCount; }
+            set { Set(ref _maxResultsCount, value); }
+        }
+        
         private bool _updateIndex = true;
         public bool UpdateIndex
         {
@@ -220,17 +228,6 @@ namespace FlashSearch.Viewer.ViewModels
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private void CancelSearch()
         {
-            // Wait 3s max before force kill.
-            // TODO: ADD CANCEL SUPPORT FOR LUCENE
-//            _luceneSearcher.CancelSearch();
-//            Task.Run(() =>
-//            {
-//                Task.Delay(3000).Wait();
-//                if (_searchInProgress)
-//                {
-//                    _cancellationTokenSource.Cancel();
-//                }
-//            });
             _luceneSearcher.CancelSearch();
             _cancellationTokenSource.Cancel();
         }
@@ -267,6 +264,7 @@ namespace FlashSearch.Viewer.ViewModels
             
             SelectedSearchResultViewModel = null;
             Results.Clear();
+            MaxResultsCount = false;
             _cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() =>
             {
@@ -280,6 +278,7 @@ namespace FlashSearch.Viewer.ViewModels
                         DispatcherHelper.UIDispatcher.Invoke(() =>
                         {
                             Results.Add(new SearchResultViewModel(result, SelectedProject.Path));
+                            MaxResultsCount = Results.Count >= LuceneSearcher.MaxSearchResults;
                         });
                     }
 
@@ -308,6 +307,7 @@ namespace FlashSearch.Viewer.ViewModels
                                     var newResult = new SearchResultViewModel(result, SelectedProject.Path);
                                     newResult.State = SearchResultState.Added;
                                     Results.Add(newResult);
+                                    MaxResultsCount = Results.Count >= LuceneSearcher.MaxSearchResults;
                                 });
                             }
                         }
