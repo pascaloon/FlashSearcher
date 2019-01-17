@@ -312,13 +312,40 @@ namespace FlashSearch
             int lineNumber = 1;
             foreach (string line in File.ReadLines(file.FullName))
             {
-                Document document = new Document();
-                document.Add(new Field("Path", file.FullName, Field.Store.YES, Field.Index.NOT_ANALYZED));
-                document.Add(new Field("LineNumber", lineNumber.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
-                document.Add(new Field("LineContent", line, Field.Store.YES, Field.Index.ANALYZED));
-                document.Add(new Field("LastWrite", lastWriteTicks.ToString(), Field.Store.YES, Field.Index.ANALYZED));
-                indexWriter.AddDocument(document);
+                if (IsPertinentLine(line))
+                {
+                    Document document = new Document();
+                    document.Add(new Field("Path", file.FullName, Field.Store.YES, Field.Index.NOT_ANALYZED));
+                    document.Add(new Field("LineNumber", lineNumber.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+                    document.Add(new Field("LineContent", line, Field.Store.YES, Field.Index.ANALYZED));
+                    document.Add(new Field("LastWrite", lastWriteTicks.ToString(), Field.Store.YES, Field.Index.ANALYZED));
+                    indexWriter.AddDocument(document);
+                }
+                
                 ++lineNumber;
+            }
+        }
+
+        private bool IsPertinentLine(string line)
+        {
+            // We don't care about lines with only WhiteSpace
+            if (String.IsNullOrWhiteSpace(line))
+                return false;
+            
+            string trimmedLine = line.Trim();
+            
+            // We care about lines that are more than 1 character
+            if (trimmedLine.Length > 1)
+                return true;
+            
+            // If the line is only 1 character, we don't care about braces.
+            switch (trimmedLine)
+            {
+                case "{":
+                case "}":
+                    return false;
+                default:
+                    return true;
             }
         }
     }
