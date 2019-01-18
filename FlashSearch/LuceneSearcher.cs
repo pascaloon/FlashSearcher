@@ -175,7 +175,7 @@ namespace FlashSearch
                 // How many indexers to spawn at first
                 int initialIndexersCount = 2;
                 // How much files must be queued before spawning help.
-                int indexersScalingFactor = 500;
+                int indexersScalingFactor = 20000;
                 
                 List<Thread> threads = new List<Thread>();
                 for (int i = 0; i < initialIndexersCount; i++)
