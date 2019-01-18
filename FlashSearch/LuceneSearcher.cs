@@ -98,13 +98,19 @@ namespace FlashSearch
                         indexWriter.DeleteDocuments(new Term("Path", file.FullName));
                         continue;
                     }
+
+                    string lineContent = doc.GetField("LineContent").StringValue;
+                    List<MatchPosition> matches = luceneQuery.GetMatches(lineContent).ToList();
+
+                    if (matches.Count == 0)
+                        continue;
                     
                     yield return new SearchResult(
                         file, 
                         Int32.Parse(doc.GetField("LineNumber").StringValue), 
-                        doc.GetField("LineContent").StringValue, 
+                        lineContent, 
                         long.Parse(doc.GetField("LastWrite").StringValue),
-                        Enumerable.Empty<MatchPosition>());
+                        matches);
                 
                 }
             }
@@ -174,8 +180,10 @@ namespace FlashSearch
 
                 // How many indexers to spawn at first
                 int initialIndexersCount = 2;
-                // How much files must be queued before spawning help.
-                int indexersScalingFactor = 20000;
+                // How much files must be queued before spawning help
+                int indexersScalingFactor = 1000;
+                // Max amount of indexers
+                int maxIndexersCount = 5;
                 
                 List<Thread> threads = new List<Thread>();
                 for (int i = 0; i < initialIndexersCount; i++)
@@ -200,7 +208,7 @@ namespace FlashSearch
                         break;
                     }
 
-                    if (_indexableFiles.Count / threads.Count >= indexersScalingFactor)
+                    if (threads.Count < maxIndexersCount && _indexableFiles.Count / threads.Count >= indexersScalingFactor)
                     {
                         Thread t = new Thread(() => IndexLoop(indexWriter, searcher, allKnownPaths));
                         t.Start();

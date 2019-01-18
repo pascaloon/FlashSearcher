@@ -44,41 +44,32 @@ namespace FlashSearch
     {
         public string LuceneQuery { get; }
 
-        private readonly List<Regex> _regexes;
+        private readonly Regex _regex;
 
         
-        public LuceneContentSelector(string luceneQuery)
+        public LuceneContentSelector(string regex)
         {
-            LuceneQuery = luceneQuery;
-            _regexes = new List<Regex>();
-            foreach (string word in luceneQuery.Split(new [] {' '}, StringSplitOptions.RemoveEmptyEntries))
+            _regex = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            
+            Regex wordsRegex = new Regex(@"\w+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            LuceneQuery = "";
+            string sanitized = Regex.Replace(regex, @"\\\w", "");
+            foreach (Match match in wordsRegex.Matches(sanitized))
             {
-                string regexString = word
-                    .Replace("(", "")
-                    .Replace(")", "")
-                    .Replace("+", "")
-                    .Replace("\\", "")
-                    .Replace(".", "")
-                    .Replace("\"", "")
-                    .Replace("AND", "")
-                    .Replace("OR", "")
-                    .Replace("\"", "")
-                    .Replace("*", "\\w*");
-                if (String.IsNullOrWhiteSpace(regexString))
-                    continue;
-                _regexes.Add(new Regex(regexString, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+                if (LuceneQuery.Length > 0)
+                    LuceneQuery += " ";
+                LuceneQuery += match.Value;
             }
+
         }
         
         public IEnumerable<MatchPosition> GetMatches(string line)
         {
-            foreach (Regex regex in _regexes)
+            MatchCollection matches = _regex.Matches(line);
+            foreach (Match match in matches)
             {
-                MatchCollection matches = regex.Matches(line);
-                foreach (Match match in matches)
-                {
-                    yield return new MatchPosition(match.Index, match.Length);
-                }
+                yield return new MatchPosition(match.Index, match.Length);
             }
         }
     }
