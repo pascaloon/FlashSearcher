@@ -37,7 +37,7 @@
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Margin" Value="0,10,0,0" />
         <Setter Property="TextAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{StaticResource TitleTextForegroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
     </Style>
     
     <!-- Matches colors -->
