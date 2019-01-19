@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -47,11 +48,11 @@ namespace FlashSearch.Viewer.Services
     
     public class FileService
     {
-        private Dictionary<string, CachedFile> _filesCache;
+        private ConcurrentDictionary<string, CachedFile> _filesCache;
 
         public FileService()
         {
-            _filesCache = new Dictionary<string, CachedFile>();
+            _filesCache = new ConcurrentDictionary<string, CachedFile>();
         }
 
         public List<LineInfo> GetMatchesInFilePeek(string path, int lineNumber, int peekSize,
@@ -70,14 +71,12 @@ namespace FlashSearch.Viewer.Services
         private CachedFile LoadFile(string path)
         {
             CachedFile cache;
-
             if (!_filesCache.TryGetValue(path, out cache))
             {
                 List<string> lines = File.ReadLines(path).ToList();
                 cache = new CachedFile(path, lines);
-                _filesCache.Add(path, cache);
+                _filesCache.AddOrUpdate(path, cache, (s, file) => cache);
             }
-
             return cache;
         }
 
