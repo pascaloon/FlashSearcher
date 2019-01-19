@@ -278,7 +278,7 @@ namespace FlashSearch.Viewer.ViewModels
                         DispatcherHelper.UIDispatcher.Invoke(() =>
                         {
                             Results.Add(new SearchResultViewModel(result, SelectedProject.Path));
-                            MaxResultsCount = Results.Count >= LuceneSearcher.MaxSearchResults;
+                            MaxResultsCount = Results.Count >= _luceneSearcher.MaxSearchResults;
                         });
                     }
 
@@ -307,7 +307,7 @@ namespace FlashSearch.Viewer.ViewModels
                                     var newResult = new SearchResultViewModel(result, SelectedProject.Path);
                                     newResult.State = SearchResultState.Added;
                                     Results.Add(newResult);
-                                    MaxResultsCount = Results.Count >= LuceneSearcher.MaxSearchResults;
+                                    MaxResultsCount = Results.Count >= _luceneSearcher.MaxSearchResults;
                                 });
                             }
                         }

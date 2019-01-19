@@ -21,15 +21,14 @@ namespace FlashSearch
 {   
     public class LuceneSearcher
     {
-        public static int MaxSearchResults = 10000; 
-        
         private readonly DirectoryInfo _indexDirectory;
 
         private ConcurrentQueue<FileInfo> _indexableFiles;
         
         public long FilesIndexed { get; private set; }        
         public long TotalFilesFound { get; private set; }
-        
+        public int MaxSearchResults { get; set; } = 10000; 
+
         public LuceneSearcher(string indexPath)
         {
             if (!Directory.Exists(indexPath))
