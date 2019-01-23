@@ -158,7 +158,7 @@ namespace FlashSearch
         {
             if (size > 0)
             {
-                _extensibleFileSelector.AddFilePredicate(f => f.Length <= size);  
+                _extensibleFileSelector.AddFilePredicate(f => !f.Exists || f.Length <= size);
             }
 
             return this;
