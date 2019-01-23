@@ -41,6 +41,7 @@
     <Compile Include="ConfigurationWatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchConfiguration.cs" />
+    <Compile Include="SymLinksUtils.cs" />
     <Compile Include="XMLIO.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

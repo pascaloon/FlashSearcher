@@ -27,12 +27,14 @@ namespace FlashSearch.Configuration
             _default = @default ?? throw new ArgumentNullException(nameof(@default));
             
             _configuration = default(T);
-            
+
+            _path = SymLinksUtils.GetFinalPathName(_path);
             _fileWatcher = new FileSystemWatcher(Path.GetDirectoryName(_path) ?? throw new ArgumentException(nameof(path)));
             _fileWatcher.Filter = Path.GetFileName(path);
             _fileWatcher.Changed += FileWatcherOnChanged;
             _fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _fileWatcher.EnableRaisingEvents = true;
+            _fileWatcher.IncludeSubdirectories = true;
 
         }
 
