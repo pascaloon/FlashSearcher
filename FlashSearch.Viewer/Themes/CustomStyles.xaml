@@ -47,8 +47,8 @@
     <!-- Results States Colors -->
     <SolidColorBrush x:Key="InProgress" Color="#DD9D00" />    
     <SolidColorBrush x:Key="Unchanged" Color="{StaticResource ForegroundColor}" />    
-    <SolidColorBrush x:Key="Added" Color="#1C6617" />    
-    <SolidColorBrush x:Key="Removed" Color="#661B1C" />    
+    <SolidColorBrush x:Key="Added" Color="#18CF0E" />    
+    <SolidColorBrush x:Key="Removed" Color="#E82020" />    
 
     
 </ResourceDictionary>
