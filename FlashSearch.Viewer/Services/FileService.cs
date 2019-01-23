@@ -7,13 +7,13 @@ using System.Text.RegularExpressions;
 
 namespace FlashSearch.Viewer.Services
 {
-    public class CachedFile
+    public class CachedFileContent
     {
         public string Path { get; }
         public List<string> Content { get; }
         private List<LineInfo> _matches;
         
-        public CachedFile(string path, List<string> content)
+        public CachedFileContent(string path, List<string> content)
         {
             if (content == null) 
                 throw new ArgumentNullException(nameof(content));
@@ -22,7 +22,7 @@ namespace FlashSearch.Viewer.Services
             _matches = Enumerable.Repeat((LineInfo)null, content.Count).ToList();
         }
         
-        public CachedFile(string path, List<string> content, List<LineInfo> matches)
+        public CachedFileContent(string path, List<string> content, List<LineInfo> matches)
         {
             if (content == null) 
                 throw new ArgumentNullException(nameof(content));
@@ -44,55 +44,56 @@ namespace FlashSearch.Viewer.Services
         public void SetCachedLinfoForLine(int lineNumber, LineInfo lineInfo) => _matches[lineNumber] = lineInfo;
 
     }
-   
     
     public class FileService
     {
-        private ConcurrentDictionary<string, CachedFile> _filesCache;
+        private ConcurrentDictionary<string, CachedFileContent> _filesContentCache;
+        private ConcurrentDictionary<string, long> _filesLastWriteCache;
 
         public FileService()
         {
-            _filesCache = new ConcurrentDictionary<string, CachedFile>();
+            _filesContentCache = new ConcurrentDictionary<string, CachedFileContent>();
+            _filesLastWriteCache = new ConcurrentDictionary<string, long>();
         }
 
         public List<LineInfo> GetMatchesInFilePeek(string path, int lineNumber, int peekSize,
             IContentSelector contentSelector)
         {
-            CachedFile cache = LoadFile(path);
+            CachedFileContent cache = LoadFile(path);
             return GetMatchesInContent(cache, contentSelector, lineNumber - peekSize, lineNumber + peekSize);
         }
         
         public List<LineInfo> GetMatchesInFile(string path, IContentSelector contentSelector)
         {
-            CachedFile cache = LoadFile(path);
+            CachedFileContent cache = LoadFile(path);
             return GetMatchesInContent(cache, contentSelector, 1, cache.Content.Count);
         }
 
-        private CachedFile LoadFile(string path)
+        private CachedFileContent LoadFile(string path)
         {
-            CachedFile cache;
-            if (!_filesCache.TryGetValue(path, out cache))
+            CachedFileContent cache;
+            if (!_filesContentCache.TryGetValue(path, out cache))
             {
                 List<string> lines = File.ReadLines(path).ToList();
-                cache = new CachedFile(path, lines);
-                _filesCache.AddOrUpdate(path, cache, (s, file) => cache);
+                cache = new CachedFileContent(path, lines);
+                _filesContentCache.AddOrUpdate(path, cache, (s, file) => cache);
             }
             return cache;
         }
 
-        private List<LineInfo> GetMatchesInContent(CachedFile file, IContentSelector contentSelector, int lineMin, int lineMax)
+        private List<LineInfo> GetMatchesInContent(CachedFileContent fileContent, IContentSelector contentSelector, int lineMin, int lineMax)
         {
             List<LineInfo> lineInfos = new List<LineInfo>();
             var index = 1;
-            foreach (string line in file.Content)
+            foreach (string line in fileContent.Content)
             {
                 if (index >= lineMin && index <= lineMax)
                 {
-                    LineInfo lineInfo = file.GetCachedLinfoForLine(index - 1);
+                    LineInfo lineInfo = fileContent.GetCachedLinfoForLine(index - 1);
                     if (lineInfo == null)
                     {
                         lineInfo = new LineInfo(line, index, contentSelector.GetMatches(line).OrderBy(l => l.Begin).ToList());
-                        file.SetCachedLinfoForLine(index - 1, lineInfo);
+                        fileContent.SetCachedLinfoForLine(index - 1, lineInfo);
                     }
                     
                     lineInfos.Add(lineInfo);
@@ -105,10 +106,24 @@ namespace FlashSearch.Viewer.Services
 
         public void InvalidateCache()
         {
-            _filesCache.Clear();
+            _filesContentCache.Clear();
         }
-        
+
+        public long GetFileLastWriteTimeTicks(FileInfo file)
+        {
+            long ticks;
+            string fileFullName = file.FullName;
+            if (!_filesLastWriteCache.TryGetValue(fileFullName, out ticks))
+            {
+                ticks = file.LastWriteTime.Ticks;
+                _filesLastWriteCache.AddOrUpdate(fileFullName, ticks, ((s, l) => ticks));
+            }
+
+            return ticks;
+        }
     }
+
+    
 
     public class LineInfo
     {

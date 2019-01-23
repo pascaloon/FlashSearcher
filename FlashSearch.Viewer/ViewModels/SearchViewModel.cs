@@ -288,7 +288,6 @@ namespace FlashSearch.Viewer.ViewModels
                         
                         _luceneSearcher.IndexContentInFolder(SelectedProject.Path, fileSelector);
 
-
                         foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
                             _currentContentSelector))
                         {
@@ -331,7 +330,7 @@ namespace FlashSearch.Viewer.ViewModels
                             {
                                 result.State = SearchResultState.Removed;
                             }
-                            else if (result.SearchResult.LastIndexTime < result.SearchResult.FileInfo.LastWriteTime.Ticks)
+                            else if (result.SearchResult.LastIndexTime < _fileService.GetFileLastWriteTimeTicks(result.SearchResult.FileInfo))
                             {
                                 result.State = SearchResultState.InProgress;
                             }
