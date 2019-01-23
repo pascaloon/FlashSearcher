@@ -59,7 +59,7 @@ namespace FlashSearch
             {
                 if (LuceneQuery.Length > 0)
                     LuceneQuery += " ";
-                LuceneQuery += $"*{match.Value}*";
+                LuceneQuery += $"*\"{match.Value}\"*";
             }
 
         }

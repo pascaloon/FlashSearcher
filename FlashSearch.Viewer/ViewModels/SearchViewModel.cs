@@ -234,11 +234,11 @@ namespace FlashSearch.Viewer.ViewModels
 
         private void Search()
         {
-            _currentContentSelector = new LuceneContentSelector(Query);
             
             IFileSelector fileSelector;
             try
             {
+                _currentContentSelector = new LuceneContentSelector(Query);
                 fileSelector =
                     ExtensibleFileSelectorBuilder.NewFileSelector()
                         .WithExcludedExtensions(_searchConfig.ExcludedExtensions)
@@ -248,9 +248,9 @@ namespace FlashSearch.Viewer.ViewModels
                         .WithMaxSize(_searchConfig.MaxFileSize)
                         .Build();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Warning = "Path Query: Invalid Regular Expression";
+                Warning = e.Message;
                 return;
             }
             
