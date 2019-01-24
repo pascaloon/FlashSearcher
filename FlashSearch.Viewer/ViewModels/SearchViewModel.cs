@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -266,6 +267,9 @@ namespace FlashSearch.Viewer.ViewModels
             Results.Clear();
             MaxResultsCount = false;
             _cancellationTokenSource = new CancellationTokenSource();
+
+            Trace.TraceInformation($"[{DateTime.Now}] Searching '{SelectedProject.Path}' in index '{indexDirectory}': '{_currentContentSelector.LuceneQuery}' => '{_currentContentSelector.RegexQuery}'");
+
             Task.Run(() =>
             {
                 try

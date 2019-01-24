@@ -43,13 +43,11 @@ namespace FlashSearch
     public class LuceneContentSelector: IContentSelector
     {
         public string LuceneQuery { get; }
+        public Regex RegexQuery { get; }
 
-        private readonly Regex _regex;
-
-        
         public LuceneContentSelector(string regex)
         {
-            _regex = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            RegexQuery = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
             
             Regex wordsRegex = new Regex(@"\w+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -66,7 +64,7 @@ namespace FlashSearch
         
         public IEnumerable<MatchPosition> GetMatches(string line)
         {
-            MatchCollection matches = _regex.Matches(line);
+            MatchCollection matches = RegexQuery.Matches(line);
             foreach (Match match in matches)
             {
                 yield return new MatchPosition(match.Index, match.Length);
