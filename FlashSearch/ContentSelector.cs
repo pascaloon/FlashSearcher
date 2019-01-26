@@ -52,12 +52,15 @@ namespace FlashSearch
             Regex wordsRegex = new Regex(@"\w+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             LuceneQuery = "";
-            string sanitized = Regex.Replace(regex, @"\\\w", "");
+            string sanitized = Regex
+                .Replace(regex, @"\\\w", "")
+                .Replace("_", " ")
+                .Trim();
             foreach (Match match in wordsRegex.Matches(sanitized))
             {
                 if (LuceneQuery.Length > 0)
                     LuceneQuery += " ";
-                LuceneQuery += $"*\"{match.Value}\"*";
+                LuceneQuery += $"*{match.Value}*";
             }
 
         }
