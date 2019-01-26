@@ -19,12 +19,21 @@ namespace FlashSearch.CLI
         public string Query { get; set; }
     }
     
+    [Verb("smart-search", HelpText = "Search in the specified project's index for the given query.")]
+    internal class SmartSearchOptions
+    {
+        [Option('t', "filetype", Required = true, HelpText = "Filter searched file with the specified filter name from the config file.")]
+        public string FileFilterName { get; set; }
+        [Option('q', "query", Required = true, HelpText = "Regex to search content.")]
+        public string Query { get; set; }
+    }
+    
     [Verb("lucene-search", HelpText = "Search in the specified project's index for the given query.")]
     internal class LuceneSearchOptions
     {
         [Option('t', "filetype", Required = true, HelpText = "Filter searched file with the specified filter name from the config file.")]
         public string FileFilterName { get; set; }
-        [Option('q', "query", Required = true, HelpText = "Regex to search content.")]
+        [Option('q', "query", Required = true, HelpText = "Lucene query to search content.")]
         public string Query { get; set; }
     }
 
@@ -124,6 +133,45 @@ namespace FlashSearch.CLI
             return 0;
         }
         
+        private static int SmartSearch(SmartSearchOptions options)
+        {
+            SearchConfiguration config = LoadConfiguration();
+            
+            string path = Directory.GetCurrentDirectory();
+            Project project = config.Projects.FirstOrDefault(
+                p => path.StartsWith(p.Path, StringComparison.InvariantCultureIgnoreCase));
+
+            if (project == null)
+                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFileName}'.");
+
+
+            FileFilter fileFilter = config.FileFilters.FirstOrDefault(filter =>
+                filter.Name.Equals(options.FileFilterName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (fileFilter == null)
+                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFileName}'.");
+
+            var fileSelector = ExtensibleFileSelectorBuilder.NewFileSelector()
+                .WithExcludedExtensions(config.ExcludedExtensions)
+                .WithExcludedPaths(config.ExcludedPaths)
+                .WithRegexFilter(fileFilter.Regex)
+                .WithExclusionRegex(fileFilter.Exclusion)
+                .WithMaxSize(config.MaxFileSize)
+                .Build();
+
+            SmartContentSelector contentSelector = new SmartContentSelector(options.Query);
+            
+            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string indexDirectory = Path.Combine(localDirectory, "Indexes", project.Name, fileFilter.Index);
+            var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
+            foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
+            {
+                PrintSearchResult(result);
+            }
+
+            return 0;
+        }
+        
         private static int LuceneSearch(LuceneSearchOptions options)
         {
             SearchConfiguration config = LoadConfiguration();
@@ -193,10 +241,9 @@ namespace FlashSearch.CLI
             var luceneSearcher = new LuceneSearcher(indexDirectory);
 
             Console.Write($"Indexing {path}...");
-            Console.Write($" Done.");
-            
             luceneSearcher.IndexContentInFolder(path, fileSelector);
-            
+            Console.Write($" Done.");
+
             return 0;            
         }
         
@@ -206,9 +253,10 @@ namespace FlashSearch.CLI
 
             try
             {
-                Parser.Default.ParseArguments<SearchOptions, LuceneSearchOptions, LuceneIndexOptions>(args)
+                Parser.Default.ParseArguments<SearchOptions, SmartSearchOptions, LuceneSearchOptions, LuceneIndexOptions>(args)
                     .MapResult(
                         (SearchOptions o) => Search(o),
+                        (SmartSearchOptions o) => SmartSearch(o),
                         (LuceneSearchOptions o) => LuceneSearch(o),
                         (LuceneIndexOptions o) => LuceneIndex(o),
                         errors => 1);

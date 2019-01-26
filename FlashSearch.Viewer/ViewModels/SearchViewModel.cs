@@ -38,7 +38,7 @@ namespace FlashSearch.Viewer.ViewModels
         private readonly ConfigurationWatcher<SearchConfiguration> _searchConfigWatcher;
         
         private LuceneSearcher _luceneSearcher;
-        private LuceneContentSelector _currentContentSelector;
+        private SmartContentSelector _smartContentSelector;
 
         private Project _selectedProject;
         public Project SelectedProject
@@ -101,7 +101,7 @@ namespace FlashSearch.Viewer.ViewModels
             {
                 Set(ref _selectedSearchResultViewModel, value);
                 if (_selectedSearchResultViewModel != null)
-                    Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, _currentContentSelector));
+                    Messenger.Default.Send<SearchEvent>(new SearchEvent(_selectedSearchResultViewModel.SearchResult, _smartContentSelector));
 
             }
         }
@@ -239,7 +239,7 @@ namespace FlashSearch.Viewer.ViewModels
             IFileSelector fileSelector;
             try
             {
-                _currentContentSelector = new LuceneContentSelector(Query);
+                _smartContentSelector = new SmartContentSelector(Query);
                 fileSelector =
                     ExtensibleFileSelectorBuilder.NewFileSelector()
                         .WithExcludedExtensions(_searchConfig.ExcludedExtensions)
@@ -268,7 +268,7 @@ namespace FlashSearch.Viewer.ViewModels
             MaxResultsCount = false;
             _cancellationTokenSource = new CancellationTokenSource();
 
-            Trace.TraceInformation($"[{DateTime.Now}] Searching '{SelectedProject.Path}' in index '{indexDirectory}': '{_currentContentSelector.LuceneQuery}' => '{_currentContentSelector.RegexQuery}'");
+            Trace.TraceInformation($"[{DateTime.Now}] Searching '{SelectedProject.Path}' in index '{indexDirectory}': '{_smartContentSelector.LuceneQuery}' => '{_smartContentSelector.RegexQuery}'");
 
             Task.Run(() =>
             {
@@ -277,7 +277,7 @@ namespace FlashSearch.Viewer.ViewModels
                     _cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
                     foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
-                        _currentContentSelector))
+                        _smartContentSelector))
                     {
                         DispatcherHelper.UIDispatcher.Invoke(() =>
                         {
@@ -293,7 +293,7 @@ namespace FlashSearch.Viewer.ViewModels
                         _luceneSearcher.IndexContentInFolder(SelectedProject.Path, fileSelector);
 
                         foreach (SearchResult result in _luceneSearcher.SearchContentInFolder(SelectedProject.Path, fileSelector,
-                            _currentContentSelector))
+                            _smartContentSelector))
                         {
                             SearchResultViewModel alreadyExisting = Results.FirstOrDefault(r =>
                                 r.SearchResult.FileInfo.FullName == result.FileInfo.FullName &&

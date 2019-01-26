@@ -42,10 +42,29 @@ namespace FlashSearch
     
     public class LuceneContentSelector: IContentSelector
     {
-        public string LuceneQuery { get; }
+        public string LuceneQuery { get; protected set; }
+
+        public LuceneContentSelector(string luceneQuery)
+        {
+            LuceneQuery = luceneQuery;
+        }
+
+        protected LuceneContentSelector()
+        {
+            LuceneQuery = String.Empty;
+        }
+        
+        public virtual IEnumerable<MatchPosition> GetMatches(string line)
+        {
+            yield return new MatchPosition(0, line.Length);
+        }
+    }
+    
+    public class SmartContentSelector: LuceneContentSelector
+    {
         public Regex RegexQuery { get; }
 
-        public LuceneContentSelector(string regex)
+        public SmartContentSelector(string regex)
         {
             RegexQuery = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
             
@@ -65,7 +84,7 @@ namespace FlashSearch
 
         }
         
-        public IEnumerable<MatchPosition> GetMatches(string line)
+        public override IEnumerable<MatchPosition> GetMatches(string line)
         {
             MatchCollection matches = RegexQuery.Matches(line);
             foreach (Match match in matches)
