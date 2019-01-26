@@ -19,6 +19,8 @@ namespace FlashSearch.Configuration
         private T _configuration;
         private FileSystemWatcher _fileWatcher;
 
+        public string FilePath => _path;
+        
         public ConfigurationWatcher(string path, Func<string, T> load, Action<string, T> save, Func<T> @default)
         {
             _path = path ?? throw new ArgumentNullException(nameof(path));

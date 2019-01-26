@@ -86,22 +86,7 @@ namespace FlashSearch.Viewer.ViewModels
 
         private void OpenFileInCode()
         {
-            Task.Run(() =>
-            {
-                try
-                {
-                    Process p = new Process();
-                    p.StartInfo.FileName = "code";
-                    p.StartInfo.Arguments = $"-g {FileName}:{LineNumber}";
-                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    p.Start();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
-            });
+            _fileService.OpenFileInCodeAsync(FileName, LineNumber);
         }
 
         private void OpenFile()

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace FlashSearch.Viewer.Services
 {
@@ -121,10 +123,21 @@ namespace FlashSearch.Viewer.Services
 
             return ticks;
         }
+
+        public Task<Process> OpenFileInCodeAsync(string path, int lineNumber)
+        {
+            return Task.Run(() =>
+            {
+                Process p = new Process();
+                p.StartInfo.FileName = "code";
+                p.StartInfo.Arguments = $"-g {path}:{lineNumber}";
+                p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                p.Start();
+                return p;
+            });
+        }
     }
-
     
-
     public class LineInfo
     {
         public string Content { get; }

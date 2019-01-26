@@ -16,6 +16,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource ForegroundBrush}" />        
     </Style>
     
+    <SolidColorBrush x:Key="FadedTextForegroundBrush" Color="#A0EFEFEF" />    
     
     <!-- View Styles -->
     <SolidColorBrush x:Key="WarningTextForegroundBrush" Color="#DD9D00" />

@@ -75,15 +75,7 @@ namespace FlashSearch.Viewer.ViewModels
             set
             {
                 Set(ref _selectedFileFilter, value);
-                SelectedFileFilterRegex = _selectedFileFilter?.Regex ?? String.Empty;
             }
-        }
-
-        private string _selectedFileFilterRegex;
-        public string SelectedFileFilterRegex
-        {
-            get { return _selectedFileFilterRegex; }
-            set { Set(ref _selectedFileFilterRegex, value); }
         }
 
         private string _selectedFileFilterName;
@@ -159,7 +151,7 @@ namespace FlashSearch.Viewer.ViewModels
         
         public RelayCommand SearchCommand { get; }
         public RelayCommand CancelSearchCommand { get; }
-        public RelayCommand SaveFileFilterCommand { get; }
+        public RelayCommand OpenSettingsCommand { get; }
         
         public SearchViewModel(FileService fileService, ConfigurationWatcher<SearchConfiguration> searchConfigWatcher)
         {
@@ -178,7 +170,12 @@ namespace FlashSearch.Viewer.ViewModels
             
             SearchCommand = new RelayCommand(Search, CanSearch);
             CancelSearchCommand = new RelayCommand(CancelSearch, CanCancelSearch);
-            SaveFileFilterCommand = new RelayCommand(SaveFileFilter, CanSaveFileFilter);
+            OpenSettingsCommand = new RelayCommand(OpenSettings);
+        }
+
+        private void OpenSettings()
+        {
+            _fileService.OpenFileInCodeAsync(_searchConfigWatcher.FilePath, 1);
         }
 
         private void OnConfigurationUpdated(object sender, SearchConfiguration newConfig)
@@ -197,31 +194,6 @@ namespace FlashSearch.Viewer.ViewModels
         private bool CanSaveFileFilter()
         {
             return !String.IsNullOrWhiteSpace(_selectedFileFilterName);
-        }
-
-        private void SaveFileFilter()
-        {
-            FileFilter filter = _searchConfig.FileFilters.FirstOrDefault(f => f.Name == _selectedFileFilterName);
-            if (filter == null && !String.IsNullOrEmpty(_selectedFileFilterRegex))
-            {
-                filter = new FileFilter()
-                {
-                    Name = _selectedFileFilterName, 
-                    Regex = _selectedFileFilterRegex
-                };
-                _searchConfig.FileFilters.Add(filter);
-                FileFilters.Add(filter);
-            }
-            else if (!String.IsNullOrEmpty(_selectedFileFilterRegex))
-            {
-                filter.Regex = _selectedFileFilterRegex;
-            }
-            else
-            {
-                _searchConfig.FileFilters.Remove(filter);
-                FileFilters.Remove(filter);
-            }
-            _searchConfigWatcher.UpdateConfiguration(_searchConfig);
         }
 
         private bool CanCancelSearch() => SearchInProgress;
@@ -244,7 +216,7 @@ namespace FlashSearch.Viewer.ViewModels
                     ExtensibleFileSelectorBuilder.NewFileSelector()
                         .WithExcludedExtensions(_searchConfig.ExcludedExtensions)
                         .WithExcludedPaths(_searchConfig.ExcludedPaths)
-                        .WithRegexFilter(SelectedFileFilterRegex)
+                        .WithRegexFilter(SelectedFileFilter.Regex)
                         .WithExclusionRegex(SelectedFileFilter.Exclusion)
                         .WithMaxSize(_searchConfig.MaxFileSize)
                         .Build();
