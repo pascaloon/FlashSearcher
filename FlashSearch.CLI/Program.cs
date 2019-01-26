@@ -58,12 +58,28 @@ namespace FlashSearch.CLI
             return watcher.GetConfiguration();
         }
 
+        private static bool _canWrite = true;
+        private static void Write(string text, ConsoleColor? color, bool force = false)
+        {
+            if (!force && !_canWrite)
+                return;
+            if (color.HasValue)
+            {
+                Console.ForegroundColor = color.Value;
+            }
+            else
+            {                
+                Console.ResetColor();
+            }
+            
+            Console.Write(text);
+            
+        }
+
         private static void PrintSearchResult(SearchResult result)
         {
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write($"{result.FileInfo.FullName}:{result.LineNumber}: ");
-            Console.ResetColor();
-
+            Write($"{result.FileInfo.FullName}:{result.LineNumber}: ", ConsoleColor.DarkGray);
+         
             List<MatchPosition> positions = result.MatchPositions.ToList();
             for (int i = 0; i < positions.Count; i++)
             {
@@ -71,13 +87,11 @@ namespace FlashSearch.CLI
                 string before = result.LineContent.Substring(lastIndex, positions[i].Begin - lastIndex);
                 string match = result.LineContent.Substring(positions[i].Begin, positions[i].Length);
                     
-                Console.Write(before);
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(match);
-                Console.ResetColor();
+                Write(before, null);
+                Write(match, ConsoleColor.Green);
             }
             string after = result.LineContent.Substring(positions.Last().Begin + positions.Last().Length);
-            Console.WriteLine(after);
+            Write($"{after}\n", null);
         }
         
         private static int Search(SearchOptions options)
@@ -242,7 +256,7 @@ namespace FlashSearch.CLI
 
             Console.Write($"Indexing {path}...");
             luceneSearcher.IndexContentInFolder(path, fileSelector);
-            Console.Write($" Done.");
+            Console.WriteLine($" Done.");
 
             return 0;            
         }
@@ -250,6 +264,7 @@ namespace FlashSearch.CLI
         public static int Main(string[] args)
         {
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
+            _canWrite = true;
 
             try
             {
@@ -272,6 +287,8 @@ namespace FlashSearch.CLI
 
         private static void ConsoleOnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
+            _canWrite = false;
+            Write("\nSearch cancelled by user.\n", ConsoleColor.Red, true);
             Console.ResetColor();
             System.Environment.Exit(0);
         }
