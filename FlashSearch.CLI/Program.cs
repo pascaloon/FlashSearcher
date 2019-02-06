@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using CommandLine;
 using FlashSearch.Configuration;
 
 namespace FlashSearch.CLI
 {
+    internal class CommonSearchOptions
+    {
+        [Option("format", Default = "%F:%n: %l", Required = false, HelpText = "Format of output results")]
+        public string Format { get; set; }
+    }
+    
     [Verb("search", HelpText = "Search in subfolders with the specified query.")]
-    internal class SearchOptions
+    internal class SearchOptions : CommonSearchOptions
     {
         [Option('f', "filter", Default = null, Required = false, HelpText = "Filter searched file with the specified regex filter.")]
         public string FileFilter { get; set; }
@@ -20,7 +27,7 @@ namespace FlashSearch.CLI
     }
     
     [Verb("smart-search", HelpText = "Search in the specified project's index for the given query.")]
-    internal class SmartSearchOptions
+    internal class SmartSearchOptions : CommonSearchOptions
     {
         [Option('t', "filetype", Required = true, HelpText = "Filter searched file with the specified filter name from the config file.")]
         public string FileFilterName { get; set; }
@@ -29,7 +36,7 @@ namespace FlashSearch.CLI
     }
     
     [Verb("lucene-search", HelpText = "Search in the specified project's index for the given query.")]
-    internal class LuceneSearchOptions
+    internal class LuceneSearchOptions : CommonSearchOptions
     {
         [Option('t', "filetype", Required = true, HelpText = "Filter searched file with the specified filter name from the config file.")]
         public string FileFilterName { get; set; }
@@ -46,7 +53,8 @@ namespace FlashSearch.CLI
     
     internal class Program
     {
-        private static String ConfigFileName = "SearchConfiguration.xml";
+        private static readonly String ConfigFileName = "SearchConfiguration.xml";
+        private static ConsoleWriter _console;
         
         private static SearchConfiguration LoadConfiguration()
         {
@@ -58,44 +66,14 @@ namespace FlashSearch.CLI
             return watcher.GetConfiguration();
         }
 
-        private static bool _canWrite = true;
-        private static void Write(string text, ConsoleColor? color, bool force = false)
+        private static void InitSearch(CommonSearchOptions options)
         {
-            if (!force && !_canWrite)
-                return;
-            if (color.HasValue)
-            {
-                Console.ForegroundColor = color.Value;
-            }
-            else
-            {                
-                Console.ResetColor();
-            }
-            
-            Console.Write(text);
-            
-        }
-
-        private static void PrintSearchResult(SearchResult result)
-        {
-            Write($"{result.FileInfo.FullName}:{result.LineNumber}: ", ConsoleColor.DarkGray);
-         
-            List<MatchPosition> positions = result.MatchPositions.ToList();
-            for (int i = 0; i < positions.Count; i++)
-            {
-                int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
-                string before = result.LineContent.Substring(lastIndex, positions[i].Begin - lastIndex);
-                string match = result.LineContent.Substring(positions[i].Begin, positions[i].Length);
-                    
-                Write(before, null);
-                Write(match, ConsoleColor.Green);
-            }
-            string after = result.LineContent.Substring(positions.Last().Begin + positions.Last().Length);
-            Write($"{after}\n", null);
+            _console = new ConsoleWriter(options.Format);
         }
         
         private static int Search(SearchOptions options)
         {
+            InitSearch(options);
             SearchConfiguration config = LoadConfiguration();
             string path = Directory.GetCurrentDirectory();        
             
@@ -140,7 +118,7 @@ namespace FlashSearch.CLI
             var flashSearcher = new FlashSearcher();
             foreach (var result in flashSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
-                PrintSearchResult(result);
+                _console.PrintSearchResult(result);
             }
             
             
@@ -149,6 +127,7 @@ namespace FlashSearch.CLI
         
         private static int SmartSearch(SmartSearchOptions options)
         {
+            InitSearch(options);
             SearchConfiguration config = LoadConfiguration();
             
             string path = Directory.GetCurrentDirectory();
@@ -180,7 +159,7 @@ namespace FlashSearch.CLI
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
-                PrintSearchResult(result);
+                _console.PrintSearchResult(result);
             }
 
             return 0;
@@ -188,6 +167,7 @@ namespace FlashSearch.CLI
         
         private static int LuceneSearch(LuceneSearchOptions options)
         {
+            InitSearch(options);
             SearchConfiguration config = LoadConfiguration();
             
             string path = Directory.GetCurrentDirectory();
@@ -219,7 +199,7 @@ namespace FlashSearch.CLI
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
-                PrintSearchResult(result);
+                _console.PrintSearchResult(result);
             }
 
             return 0;
@@ -264,8 +244,7 @@ namespace FlashSearch.CLI
         public static int Main(string[] args)
         {
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-            _canWrite = true;
-
+            
             try
             {
                 Parser.Default.ParseArguments<SearchOptions, SmartSearchOptions, LuceneSearchOptions, LuceneIndexOptions>(args)
@@ -287,8 +266,8 @@ namespace FlashSearch.CLI
 
         private static void ConsoleOnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            _canWrite = false;
-            Write("\nSearch cancelled by user.\n", ConsoleColor.Red, true);
+            _console.CanWrite = false;
+            _console.Write("\nSearch cancelled by user.\n", ConsoleColor.Red, true);
             Console.ResetColor();
             System.Environment.Exit(0);
         }
@@ -301,4 +280,115 @@ namespace FlashSearch.CLI
             return Path.Combine(directoryName, ConfigFileName);
         }
     }
+    
+    class ConsoleWriter
+    {
+        private Dictionary<char, Action<SearchResult>> _formatKeys;
+        
+        public bool CanWrite { get; set; }
+
+        private List<Action<SearchResult>> _outputParts;
+        
+        public ConsoleWriter(string format)
+        {
+            CanWrite = true;
+            
+            _formatKeys = new Dictionary<char, Action<SearchResult>>()
+            {
+                {'F', r => Write(r.FileInfo.FullName, ConsoleColor.DarkGray)},
+                {'f', r => Write(r.FileInfo.FullName.Replace(Directory.GetCurrentDirectory(), "."), ConsoleColor.DarkGray)},
+                {'n', r => Write(r.LineNumber.ToString(), ConsoleColor.DarkGray)},
+                {'l', WriteMatchedLine},
+                {'m', WriteMatch},
+            };
+            
+            _outputParts = new List<Action<SearchResult>>();
+
+            StringBuilder buffer = new StringBuilder();
+            for (int i = 0; i < format.Length; i++)
+            {
+                if (format[i] == '%')
+                {
+                    if (i + 1 == format.Length)
+                        throw new FormatException("Special character '%' incomplete.");
+                    else if (format[i + 1] == '%')
+                        i++; // skip it: %% is escaped to %
+                    else if (!_formatKeys.ContainsKey(format[i+1]))
+                        throw new FormatException($"Special character '%{format[i+1]}' is not recognized.");
+                    else
+                    {
+                        if (buffer.Length != 0)
+                        {
+                            string b = buffer.ToString();
+                            _outputParts.Add(r => Write(b, ConsoleColor.DarkGray));
+                        }
+                        _outputParts.Add(_formatKeys[format[i+1]]);
+                        buffer.Clear();
+                        i++;
+                    }
+                }
+                else
+                {
+                    buffer.Append(format[i]);
+                }
+            }
+            
+            if (buffer.Length != 0)
+            {
+                string b = buffer.ToString();
+                _outputParts.Add(r => Write(b, ConsoleColor.DarkGray));
+            }
+
+            _outputParts.Add(r => Write("\n", null));
+
+        }
+        
+        public void Write(string text, ConsoleColor? color, bool force = false)
+        {
+            if (!force && !CanWrite)
+                return;
+            if (color.HasValue)
+            {
+                Console.ForegroundColor = color.Value;
+            }
+            else
+            {                
+                Console.ResetColor();
+            }
+            
+            Console.Write(text);
+        }
+
+        private void WriteMatchedLine(SearchResult result)
+        {
+            List<MatchPosition> positions = result.MatchPositions.ToList();
+            for (int i = 0; i < positions.Count; i++)
+            {
+                int lastIndex = i == 0 ? 0 : (positions[i - 1].Begin + positions[i - 1].Length);
+                string before = result.LineContent.Substring(lastIndex, positions[i].Begin - lastIndex);
+                string match = result.LineContent.Substring(positions[i].Begin, positions[i].Length);
+                    
+                Write(before, null);
+                Write(match, ConsoleColor.Green);
+            }
+            string after = result.LineContent.Substring(positions.Last().Begin + positions.Last().Length);
+            Write(after, null);
+        }
+        
+        private void WriteMatch(SearchResult result)
+        {
+            MatchPosition firstMatch = result.MatchPositions.First();                    
+            Write(result.LineContent.Substring(firstMatch.Begin, firstMatch.Length), ConsoleColor.Green);
+        }
+        
+        public void PrintSearchResult(SearchResult result)
+        {
+            foreach (var outputPart in _outputParts)
+            {
+                outputPart(result);
+            }         
+            
+        }
+    }
+    
 }
