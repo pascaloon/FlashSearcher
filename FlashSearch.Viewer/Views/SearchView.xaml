@@ -51,13 +51,18 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="25" />
                 </Grid.ColumnDefinitions>
-                <ComboBox Grid.Column="0" SelectedItem="{Binding SelectedFileFilter}" ItemsSource="{Binding FileFilters}">
+                <ComboBox Grid.Column="0" SelectedItem="{Binding SelectedFileFilter}" ItemsSource="{Binding FileFilters}" HorizontalContentAlignment="Stretch" >
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Name}" />
-                                <TextBlock Text="{Binding Regex}" Margin="8,0" Foreground="{StaticResource FadedTextForegroundBrush}" />                                
-                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" />
+                                <TextBlock Grid.Column="1" Text="{Binding Regex}" TextAlignment="Right" 
+                                           Foreground="{StaticResource FadedTextForegroundBrush}" />     
+                            </Grid>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
