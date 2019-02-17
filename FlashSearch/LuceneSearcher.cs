@@ -69,51 +69,38 @@ namespace FlashSearch
             queryParser.AllowLeadingWildcard = true;
             Query query = queryParser.Parse(luceneQuery.LuceneQuery);
             TopDocs docs = searcher.Search(query, MaxSearchResults);
-            
-            using (IndexWriter indexWriter = new IndexWriter(
-                new SimpleFSDirectory(_indexDirectory), 
-                new StandardAnalyzer(Version.LUCENE_30), 
-                false, 
-                IndexWriter.MaxFieldLength.UNLIMITED))
+
+            foreach (var topDoc in docs.ScoreDocs)
             {
-                foreach (var topDoc in docs.ScoreDocs)
+                if (_cancel)
                 {
-                    if (_cancel)
-                    {
-                        yield break;
-                    }
-                    
-                    Document doc = searcher.Doc(topDoc.Doc);
-                    FileInfo file = new FileInfo(doc.GetField("Path").StringValue);
-
-                    if (!file.FullName.StartsWith(directoryPath, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                        
-                    if (!fileSelector.IsFileValid(file))
-                        continue;
-
-                    if (!file.Exists)
-                    {
-                        indexWriter.DeleteDocuments(new Term("Path", file.FullName));
-                        continue;
-                    }
-
-                    string lineContent = doc.GetField("LineContent").StringValue;
-                    List<MatchPosition> matches = luceneQuery.GetMatches(lineContent).ToList();
-
-                    if (matches.Count == 0)
-                        continue;
-                    
-                    yield return new SearchResult(
-                        file, 
-                        Int32.Parse(doc.GetField("LineNumber").StringValue), 
-                        lineContent, 
-                        long.Parse(doc.GetField("LastWrite").StringValue),
-                        matches);
-                
+                    yield break;
                 }
+
+                Document doc = searcher.Doc(topDoc.Doc);
+                FileInfo file = new FileInfo(doc.GetField("Path").StringValue);
+
+                if (!file.FullName.StartsWith(directoryPath, StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                if (!fileSelector.IsFileValid(file))
+                    continue;
+
+                string lineContent = doc.GetField("LineContent").StringValue;
+                List<MatchPosition> matches = luceneQuery.GetMatches(lineContent).ToList();
+
+                if (matches.Count == 0)
+                    continue;
+
+                yield return new SearchResult(
+                    file,
+                    Int32.Parse(doc.GetField("LineNumber").StringValue),
+                    lineContent,
+                    long.Parse(doc.GetField("LastWrite").StringValue),
+                    matches);
+
             }
-            
+
         }
 
 
