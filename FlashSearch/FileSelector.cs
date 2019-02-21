@@ -113,7 +113,7 @@ namespace FlashSearch
                 .Where(p => !String.IsNullOrWhiteSpace(p))
                 .Select(p => new Regex(p, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 .ToList();
-            _extensibleFileSelector.AddDirectoryPredicate(f => !regexes.Any(r => r.IsMatch(f.FullName)));
+            _extensibleFileSelector.AddDirectoryPredicate(f => !regexes.Any(r => r.IsMatch(f.FullName.EndsWith("\\") ? f.FullName : $"{f.FullName}\\")));
             return this;
         }
 

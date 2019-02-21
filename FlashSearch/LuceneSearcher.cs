@@ -83,7 +83,7 @@ namespace FlashSearch
                 if (!file.FullName.StartsWith(directoryPath, StringComparison.InvariantCultureIgnoreCase))
                     continue;
 
-                if (!fileSelector.IsFileValid(file))
+                if (!fileSelector.IsFileValid(file) || !fileSelector.IsDirectoryValid(file.Directory))
                     continue;
 
                 string lineContent = doc.GetField("LineContent").StringValue;
@@ -145,10 +145,14 @@ namespace FlashSearch
                     String path = doc.GetField("Path").StringValue;
                     if (allKnownPaths.Contains(path))
                         continue;
+
+                    FileInfo fileInfo = new FileInfo(path);
+                    
+                    if (!fileSelector.IsFileValid(fileInfo) || !fileSelector.IsDirectoryValid(fileInfo.Directory))
+                        continue;
                     
                     long lastWrite = long.Parse(doc.GetField("LastWrite").StringValue);
                     
-                    FileInfo fileInfo = new FileInfo(path);
                     if (fileInfo.Exists)
                     {
                         IndexFile(indexWriter, searcher, fileInfo, lastWrite);
