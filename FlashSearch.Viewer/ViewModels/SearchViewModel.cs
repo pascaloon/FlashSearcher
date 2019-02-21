@@ -183,11 +183,15 @@ namespace FlashSearch.Viewer.ViewModels
             _searchConfig = newConfig;
             DispatcherHelper.UIDispatcher.Invoke(() =>
             {
+                string oldSelectedFileFilter = _selectedFileFilter.Name;
                 FileFilters.ResetWith(_searchConfig.FileFilters);
-                SelectedFileFilter = FileFilters.FirstOrDefault();
-                
+                SelectedFileFilter = FileFilters.FirstOrDefault(ff => ff.Name.Equals(oldSelectedFileFilter)) 
+                                     ?? FileFilters.FirstOrDefault();
+
+                string oldSelectedProject = _selectedProject.Name;
                 Projects.ResetWith(_searchConfig.Projects);
-                SelectedProject = Projects.FirstOrDefault();
+                SelectedProject = Projects.FirstOrDefault(p => p.Name.Equals(oldSelectedProject)) 
+                                  ?? Projects.FirstOrDefault();
             });
         }
 
