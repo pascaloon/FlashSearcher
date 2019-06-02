@@ -17,6 +17,9 @@
         <DataTemplate DataType="{x:Type viewModels:ResultPeekViewModel}">
             <views:ResultPeekView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:FileNotFoundViewModel}">
+            <views:FileNotFoundView />
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>

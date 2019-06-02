@@ -27,6 +27,12 @@ namespace FlashSearch.Viewer.ViewModels
             if (result == null)
             {
                 RightContent = GlobalFactory.Container.Resolve<WelcomeViewModel>();
+
+            }
+            else if (!result.SelectedResult.FileInfo.Exists)
+            {
+                RightContent = GlobalFactory.Container.Resolve<FileNotFoundViewModel>(
+                    new NamedParameter("searchResult", result.SelectedResult));
             }
             else
             {
