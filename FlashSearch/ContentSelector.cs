@@ -64,15 +64,18 @@ namespace FlashSearch
     {
         public Regex RegexQuery { get; }
 
-        public SmartContentSelector(string regex)
+        public SmartContentSelector(string pattern, bool matchCase = false)
         {
-            RegexQuery = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            RegexOptions regexOptions = RegexOptions.Compiled;
+            if (!matchCase)
+                regexOptions |= RegexOptions.IgnoreCase;
+            RegexQuery = new Regex(pattern, regexOptions);
             
             Regex wordsRegex = new Regex(@"\w+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             LuceneQuery = "";
             string sanitized = Regex
-                .Replace(regex, @"\\\w", "")
+                .Replace(pattern, @"\\\w", "")
                 .Replace("_", " ")
                 .Trim();
             foreach (Match match in wordsRegex.Matches(sanitized))

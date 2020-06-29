@@ -54,7 +54,7 @@ namespace FlashSearch.Viewer.ViewModels
             set { Set(ref _projects, value); }
         }
         
-        private string _query = "FlashSearch";
+        private string _query = "";
         public string Query
         {
             get => _query;
@@ -145,6 +145,13 @@ namespace FlashSearch.Viewer.ViewModels
             get { return _updateIndex; }
             set { Set(ref _updateIndex, value); }
         }
+
+        private bool _matchCase = false;
+        public bool MatchCase
+        {
+            get { return _matchCase; }
+            set { Set(ref _matchCase, value); }
+        }
         
         public ObservableCollection<SearchResultViewModel> Results { get; private set; }
         public ObservableCollectionRange<FileFilter> FileFilters { get; private set; }
@@ -215,7 +222,7 @@ namespace FlashSearch.Viewer.ViewModels
             IFileSelector fileSelector;
             try
             {
-                _smartContentSelector = new SmartContentSelector(Query);
+                _smartContentSelector = new SmartContentSelector(Query, MatchCase);
                 fileSelector =
                     ExtensibleFileSelectorBuilder.NewFileSelector()
                         .WithExcludedExtensions(_searchConfig.ExcludedExtensions)
