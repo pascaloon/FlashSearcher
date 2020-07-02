@@ -25,9 +25,13 @@ namespace FlashSearch
     {
         private readonly Regex _regex;
         
-        public RegexContentSelector(string regex)
+        public RegexContentSelector(string pattern, bool caseSensitive)
         {
-            _regex = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            RegexOptions regexOptions = RegexOptions.Compiled;
+            if (!caseSensitive)
+                regexOptions |= RegexOptions.IgnoreCase;
+
+            _regex = new Regex(pattern, regexOptions);
         }
         
         public IEnumerable<MatchPosition> GetMatches(string line)
@@ -64,10 +68,10 @@ namespace FlashSearch
     {
         public Regex RegexQuery { get; }
 
-        public SmartContentSelector(string pattern, bool matchCase = false)
+        public SmartContentSelector(string pattern, bool caseSensitive)
         {
             RegexOptions regexOptions = RegexOptions.Compiled;
-            if (!matchCase)
+            if (!caseSensitive)
                 regexOptions |= RegexOptions.IgnoreCase;
             RegexQuery = new Regex(pattern, regexOptions);
             

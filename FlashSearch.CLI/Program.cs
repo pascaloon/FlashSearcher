@@ -24,8 +24,10 @@ namespace FlashSearch.CLI
         public string FileFilterName { get; set; }
         [Option('q', "query", Required = true, HelpText = "Regex to search content.")]
         public string Query { get; set; }
+        [Option('c', "casesensitive", Default = false, HelpText = "Makes the search case sensitive.")]
+        public bool CaseSensitive { get; set; }
     }
-    
+
     [Verb("smart-search", HelpText = "Search in the specified project's index for the given query.")]
     internal class SmartSearchOptions : CommonSearchOptions
     {
@@ -33,6 +35,8 @@ namespace FlashSearch.CLI
         public string FileFilterName { get; set; }
         [Option('q', "query", Required = true, HelpText = "Regex to search content.")]
         public string Query { get; set; }
+        [Option('c', "casesensitive", Default = false, HelpText = "Makes the search case sensitive.")]
+        public bool CaseSensitive { get; set; }
     }
     
     [Verb("lucene-search", HelpText = "Search in the specified project's index for the given query.")]
@@ -114,7 +118,7 @@ namespace FlashSearch.CLI
                     .Build();
             }
             
-            IContentSelector contentSelector = new RegexContentSelector(options.Query);
+            IContentSelector contentSelector = new RegexContentSelector(options.Query, options.CaseSensitive);
             var flashSearcher = new FlashSearcher();
             foreach (var result in flashSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
@@ -152,7 +156,7 @@ namespace FlashSearch.CLI
                 .WithMaxSize(config.MaxFileSize)
                 .Build();
 
-            SmartContentSelector contentSelector = new SmartContentSelector(options.Query);
+            SmartContentSelector contentSelector = new SmartContentSelector(options.Query, options.CaseSensitive);
             
             string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string indexDirectory = Path.Combine(localDirectory, "Indexes", project.Name, fileFilter.Index);
