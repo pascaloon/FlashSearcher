@@ -25,9 +25,13 @@ namespace FlashSearch
     {
         private readonly Regex _regex;
         
-        public RegexContentSelector(string regex)
+        public RegexContentSelector(string pattern, bool caseSensitive)
         {
-            _regex = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            RegexOptions regexOptions = RegexOptions.Compiled;
+            if (!caseSensitive)
+                regexOptions |= RegexOptions.IgnoreCase;
+
+            _regex = new Regex(pattern, regexOptions);
         }
         
         public IEnumerable<MatchPosition> GetMatches(string line)
@@ -64,15 +68,18 @@ namespace FlashSearch
     {
         public Regex RegexQuery { get; }
 
-        public SmartContentSelector(string regex)
+        public SmartContentSelector(string pattern, bool caseSensitive)
         {
-            RegexQuery = new Regex(regex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            RegexOptions regexOptions = RegexOptions.Compiled;
+            if (!caseSensitive)
+                regexOptions |= RegexOptions.IgnoreCase;
+            RegexQuery = new Regex(pattern, regexOptions);
             
             Regex wordsRegex = new Regex(@"\w+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             LuceneQuery = "";
             string sanitized = Regex
-                .Replace(regex, @"\\\w", "")
+                .Replace(pattern, @"\\\w", "")
                 .Replace("_", " ")
                 .Trim();
             foreach (Match match in wordsRegex.Matches(sanitized))

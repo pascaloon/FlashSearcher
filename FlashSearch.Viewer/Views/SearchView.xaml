@@ -79,13 +79,15 @@
             </TextBox.InputBindings>
         </TextBox>
 
-        <CheckBox Grid.Row="4" IsChecked="{Binding UpdateIndex}" HorizontalAlignment="Left">Index</CheckBox>
-        <Button Grid.Row="4" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
-        <Button Grid.Row="4" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <CheckBox Grid.Row="4" IsChecked="{Binding MatchCase}" HorizontalAlignment="Left" Content="Match Case"/>
 
-        <TextBlock Grid.Row="5" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" Text="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource StringContentToVisibility}}"/>
+        <CheckBox Grid.Row="5" IsChecked="{Binding UpdateIndex}" HorizontalAlignment="Left">Index</CheckBox>
+        <Button Grid.Row="5" Content="Search" HorizontalAlignment="Center" Command="{Binding SearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource InvertedBooleanToVisibility}, UpdateSourceTrigger=PropertyChanged}" />
+        <Button Grid.Row="5" Content="Cancel" HorizontalAlignment="Center" Command="{Binding CancelSearchCommand}" Visibility="{Binding SearchInProgress, Converter={StaticResource BooleanToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Row="6" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" Text="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource StringContentToVisibility}}"/>
         
-        <StackPanel Grid.Row="6" Visibility="{Binding IndexingInProgress, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,10">
+        <StackPanel Grid.Row="7" Visibility="{Binding IndexingInProgress, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,10">
             <ProgressBar Value="{Binding IndexedFiles}" Maximum="{Binding TotalFilesFound}"></ProgressBar>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <TextBlock Text="{Binding IndexedFiles}"/>
@@ -94,7 +96,7 @@
             </StackPanel>
         </StackPanel>
         
-        <StackPanel Grid.Row="7" Orientation="Horizontal">
+        <StackPanel Grid.Row="8" Orientation="Horizontal">
             <TextBlock Text="Results:" Margin="0,0,5,0"/>            
             <TextBlock Text="{Binding Results.Count}">
                 <TextBlock.Style>
@@ -110,13 +112,12 @@
                 </TextBlock.Style>
             </TextBlock>
         </StackPanel>
-        <DataGrid Grid.Row="8" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" LoadingRow="DataGrid_OnLoadingRow" >
+        <DataGrid Grid.Row="9" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedSearchResultViewModel}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" LoadingRow="DataGrid_OnLoadingRow" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File" Binding="{Binding File}" SortDirection="Ascending" />
-                <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" />
+                <DataGridTextColumn Header="Line" Binding="{Binding LineNumber}" />
             </DataGrid.Columns>
         </DataGrid>
-        
-        
+
     </Grid>
 </UserControl>
