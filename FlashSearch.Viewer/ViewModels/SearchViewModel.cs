@@ -242,8 +242,7 @@ namespace FlashSearch.Viewer.ViewModels
             _fileService.InvalidateCache();
             SearchInProgress = true;
             
-            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string indexDirectory = Path.Combine(localDirectory, "Indexes", SelectedProject.Name, SelectedFileFilter.Index);
+            string indexDirectory = ConfigurationPathResolver.GetIndexDir(SelectedProject.Name, SelectedFileFilter.Index);
             _luceneSearcher = new LuceneSearcher(indexDirectory);
             
             SelectedSearchResultViewModel = null;
