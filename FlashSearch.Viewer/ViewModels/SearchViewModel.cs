@@ -36,6 +36,7 @@ namespace FlashSearch.Viewer.ViewModels
         private readonly FileService _fileService;
         private SearchConfiguration _searchConfig;
         private readonly ConfigurationWatcher<SearchConfiguration> _searchConfigWatcher;
+        private readonly ConfigurationPathResolver _configPathResolver;
         
         private LuceneSearcher _luceneSearcher;
         private SmartContentSelector _smartContentSelector;
@@ -160,12 +161,15 @@ namespace FlashSearch.Viewer.ViewModels
         public RelayCommand CancelSearchCommand { get; }
         public RelayCommand OpenSettingsCommand { get; }
         
-        public SearchViewModel(FileService fileService, ConfigurationWatcher<SearchConfiguration> searchConfigWatcher)
+        public SearchViewModel(FileService fileService,
+            ConfigurationWatcher<SearchConfiguration> searchConfigWatcher,
+            ConfigurationPathResolver configPathResolver)
         {
             _fileService = fileService;
             _searchConfigWatcher = searchConfigWatcher;
             _searchConfigWatcher.ConfigurationUpdated += OnConfigurationUpdated;
             _searchConfig = searchConfigWatcher.GetConfiguration();
+            _configPathResolver = configPathResolver;
             _searchInProgress = false;
 
             Results = new ObservableCollection<SearchResultViewModel>();
@@ -242,7 +246,7 @@ namespace FlashSearch.Viewer.ViewModels
             _fileService.InvalidateCache();
             SearchInProgress = true;
             
-            string indexDirectory = ConfigurationPathResolver.GetIndexDir(SelectedProject.Name, SelectedFileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(SelectedProject.Name, SelectedFileFilter.Index);
             _luceneSearcher = new LuceneSearcher(indexDirectory);
             
             SelectedSearchResultViewModel = null;

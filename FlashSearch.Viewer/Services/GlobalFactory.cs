@@ -18,7 +18,10 @@ namespace FlashSearch.Viewer.Services
             // Register File Service
             builder.RegisterType<FileService>().AsSelf().SingleInstance();
 
-            string configurationPath = ConfigurationPathResolver.GetConfigurationPath();
+            ConfigurationPathResolver configPathResolver = new ConfigurationPathResolver();
+            builder.RegisterInstance(configPathResolver).AsSelf().SingleInstance();
+
+            string configurationPath = configPathResolver.GetConfigurationPath();
 
             // Register Search Configuration
             builder.RegisterInstance(

@@ -4,25 +4,25 @@ using System.Reflection;
 
 namespace FlashSearch.Configuration
 {
-    public static class ConfigurationPathResolver
+    public class ConfigurationPathResolver
     {
-        private static readonly String ConfigFileName = "SearchConfiguration.xml";
-        private static string ConfigFilePath = null;
-        private static string IndexesDir = null;
+        private readonly String ConfigFileName = "SearchConfiguration.xml";
+        private string ConfigFilePath = null;
+        private string IndexesDir = null;
 
-        public static string GetConfigurationPath()
+        public string GetConfigurationPath()
         {
             ResolvePathsIfEmpty();
             return ConfigFilePath;
         }
 
-        public static string GetIndexDir(string projectName, string fileFilterIndex)
+        public string GetIndexDir(string projectName, string fileFilterIndex)
         {
             ResolvePathsIfEmpty();
             return Path.Combine(IndexesDir, projectName, fileFilterIndex);
         }
 
-        private static void ResolvePathsIfEmpty()
+        private void ResolvePathsIfEmpty()
         {
             if (String.IsNullOrEmpty(ConfigFilePath))
             {
@@ -31,7 +31,7 @@ namespace FlashSearch.Configuration
             }
         }
 
-        public static string ResolveConfigurationPath()
+        public string ResolveConfigurationPath()
         {
             string path = GetPathFromAssembly();
             if (File.Exists(path))
@@ -40,7 +40,7 @@ namespace FlashSearch.Configuration
             return GetPathFromLocalAppData();
         }
 
-        private static string GetPathFromAssembly()
+        private string GetPathFromAssembly()
         {
             string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (String.IsNullOrEmpty(directoryName))
@@ -49,7 +49,7 @@ namespace FlashSearch.Configuration
             return Path.Combine(directoryName, ConfigFileName);
         }
 
-        private static string GetPathFromLocalAppData()
+        private string GetPathFromLocalAppData()
         {
             string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (!Directory.Exists(localAppDataPath))
@@ -62,7 +62,7 @@ namespace FlashSearch.Configuration
             return Path.Combine(flashSearcherDataDir, ConfigFileName);
         }
 
-        private static string ResolveIndexesDir(string configFilePath)
+        private string ResolveIndexesDir(string configFilePath)
         {
             string configFileDir = Path.GetDirectoryName(configFilePath);
             return Path.Combine(configFileDir, "Indexes");

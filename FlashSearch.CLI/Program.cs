@@ -58,11 +58,13 @@ namespace FlashSearch.CLI
     internal class Program
     {
         private static String ConfigFilePath = null;
+        private static ConfigurationPathResolver _configPathResolver;
         private static ConsoleWriter _console;
         
         private static SearchConfiguration LoadConfiguration()
         {
-            ConfigFilePath = ConfigurationPathResolver.GetConfigurationPath();
+            _configPathResolver = new ConfigurationPathResolver();
+            ConfigFilePath = _configPathResolver.GetConfigurationPath();
             var watcher = new ConfigurationWatcher<SearchConfiguration>(
                 ConfigFilePath,
                 XMLIO.Load<SearchConfiguration>,
@@ -159,7 +161,7 @@ namespace FlashSearch.CLI
 
             SmartContentSelector contentSelector = new SmartContentSelector(options.Query, options.CaseSensitive);
             
-            string indexDirectory = ConfigurationPathResolver.GetIndexDir(project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
@@ -198,7 +200,7 @@ namespace FlashSearch.CLI
 
             LuceneContentSelector contentSelector = new LuceneContentSelector(options.Query);
             
-            string indexDirectory = ConfigurationPathResolver.GetIndexDir(project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
@@ -233,7 +235,7 @@ namespace FlashSearch.CLI
                 .WithMaxSize(config.MaxFileSize)
                 .Build();
             
-            string indexDirectory = ConfigurationPathResolver.GetIndexDir(project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory);
 
             Console.Write($"Indexing {path}...");
