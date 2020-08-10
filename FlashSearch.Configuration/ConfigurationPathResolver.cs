@@ -44,7 +44,7 @@ namespace FlashSearch.Configuration
         {
             string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (String.IsNullOrEmpty(directoryName))
-                return ConfigFileName;
+                throw new Exception($"Unable to find executable's directory");
 
             return Path.Combine(directoryName, ConfigFileName);
         }
