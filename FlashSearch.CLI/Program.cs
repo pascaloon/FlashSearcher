@@ -57,13 +57,16 @@ namespace FlashSearch.CLI
     
     internal class Program
     {
-        private static readonly String ConfigFileName = "SearchConfiguration.xml";
+        private static String ConfigFilePath = null;
+        private static ConfigurationPathResolver _configPathResolver;
         private static ConsoleWriter _console;
         
         private static SearchConfiguration LoadConfiguration()
         {
+            _configPathResolver = new ConfigurationPathResolver();
+            ConfigFilePath = _configPathResolver.GetConfigurationPath();
             var watcher = new ConfigurationWatcher<SearchConfiguration>(
-                GetConfigurationPath(),
+                ConfigFilePath,
                 XMLIO.Load<SearchConfiguration>,
                 XMLIO.Save,
                 () => SearchConfiguration.Default);
@@ -97,7 +100,7 @@ namespace FlashSearch.CLI
                 FileFilter fileFilter = config.FileFilters.First(filter =>
                     filter.Name.Equals(options.FileFilterName, StringComparison.InvariantCultureIgnoreCase));
                 if (fileFilter == null)
-                    throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFileName}'.");
+                    throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFilePath}'.");
                 
                 fileSelector = ExtensibleFileSelectorBuilder.NewFileSelector()
                     .WithoutExcludedExtensions()
@@ -139,14 +142,14 @@ namespace FlashSearch.CLI
                 p => path.StartsWith(p.Path, StringComparison.InvariantCultureIgnoreCase));
 
             if (project == null)
-                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFilePath}'.");
 
 
             FileFilter fileFilter = config.FileFilters.FirstOrDefault(filter =>
                 filter.Name.Equals(options.FileFilterName, StringComparison.InvariantCultureIgnoreCase));
 
             if (fileFilter == null)
-                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFilePath}'.");
 
             var fileSelector = ExtensibleFileSelectorBuilder.NewFileSelector()
                 .WithExcludedExtensions(config.ExcludedExtensions)
@@ -158,8 +161,7 @@ namespace FlashSearch.CLI
 
             SmartContentSelector contentSelector = new SmartContentSelector(options.Query, options.CaseSensitive);
             
-            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string indexDirectory = Path.Combine(localDirectory, "Indexes", project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
@@ -179,14 +181,14 @@ namespace FlashSearch.CLI
                 p => path.StartsWith(p.Path, StringComparison.InvariantCultureIgnoreCase));
 
             if (project == null)
-                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFilePath}'.");
 
 
             FileFilter fileFilter = config.FileFilters.FirstOrDefault(filter =>
                 filter.Name.Equals(options.FileFilterName, StringComparison.InvariantCultureIgnoreCase));
 
             if (fileFilter == null)
-                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFilePath}'.");
 
             var fileSelector = ExtensibleFileSelectorBuilder.NewFileSelector()
                 .WithExcludedExtensions(config.ExcludedExtensions)
@@ -198,8 +200,7 @@ namespace FlashSearch.CLI
 
             LuceneContentSelector contentSelector = new LuceneContentSelector(options.Query);
             
-            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string indexDirectory = Path.Combine(localDirectory, "Indexes", project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory) {MaxSearchResults = Int32.MaxValue};
             foreach (var result in luceneSearcher.SearchContentInFolder(path, fileSelector, contentSelector))
             {
@@ -218,13 +219,13 @@ namespace FlashSearch.CLI
                 p => path.StartsWith(p.Path, StringComparison.InvariantCultureIgnoreCase));
 
             if (project == null)
-                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"Current path is not under any known project. Please edit '{ConfigFilePath}'.");
 
             FileFilter fileFilter = config.FileFilters.FirstOrDefault(filter =>
                 filter.Name.Equals(options.FileFilterName, StringComparison.InvariantCultureIgnoreCase));
 
             if (fileFilter == null)
-                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFileName}'.");
+                throw new ArgumentException($"File filter named '{options.FileFilterName}' does not exist. Please edit '{ConfigFilePath}'.");
 
             var fileSelector = ExtensibleFileSelectorBuilder.NewFileSelector()
                 .WithExcludedExtensions(config.ExcludedExtensions)
@@ -234,8 +235,7 @@ namespace FlashSearch.CLI
                 .WithMaxSize(config.MaxFileSize)
                 .Build();
             
-            string localDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string indexDirectory = Path.Combine(localDirectory, "Indexes", project.Name, fileFilter.Index);
+            string indexDirectory = _configPathResolver.GetIndexDir(project.Name, fileFilter.Index);
             var luceneSearcher = new LuceneSearcher(indexDirectory);
 
             Console.Write($"Indexing {path}...");
@@ -274,14 +274,6 @@ namespace FlashSearch.CLI
             _console.Write("\nSearch cancelled by user.\n", ConsoleColor.Red, true);
             Console.ResetColor();
             System.Environment.Exit(0);
-        }
-        
-        private static string GetConfigurationPath()
-        {
-            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (String.IsNullOrEmpty(directoryName))
-                throw new Exception("Unable to find executable's directory.");
-            return Path.Combine(directoryName, ConfigFileName);
         }
     }
     

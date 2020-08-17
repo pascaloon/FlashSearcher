@@ -17,11 +17,16 @@ namespace FlashSearch.Viewer.Services
 
             // Register File Service
             builder.RegisterType<FileService>().AsSelf().SingleInstance();
-            
+
+            ConfigurationPathResolver configPathResolver = new ConfigurationPathResolver();
+            builder.RegisterInstance(configPathResolver).AsSelf().SingleInstance();
+
+            string configurationPath = configPathResolver.GetConfigurationPath();
+
             // Register Search Configuration
             builder.RegisterInstance(
                 new ConfigurationWatcher<SearchConfiguration>(
-                    GetConfigurationPath(), 
+                    configurationPath, 
                     XMLIO.Load<SearchConfiguration>,
                     XMLIO.Save,
                     () => SearchConfiguration.Default))
@@ -31,14 +36,6 @@ namespace FlashSearch.Viewer.Services
             ViewModelLocator.RegisterTypes(builder);
 
             Container = builder.Build();
-        }
-
-        static string GetConfigurationPath()
-        {
-            string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (String.IsNullOrEmpty(directoryName))
-                throw new Exception("Unable to find executable's directory.");
-            return Path.Combine(directoryName, "SearchConfiguration.xml");
         }
     }
 }
