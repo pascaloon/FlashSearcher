@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,8 @@ namespace FlashSearch.CLI
     {
         [Option("format", Default = "%F:%n: %l", Required = false, HelpText = "Format of output results")]
         public string Format { get; set; }
+        [Option("time", Default = false, HelpText = "Displays how long the operation took to complete.")]
+        public bool DisplayTime { get; set; }
     }
     
     [Verb("search", HelpText = "Search in subfolders with the specified query.")]
@@ -53,6 +56,8 @@ namespace FlashSearch.CLI
     {
         [Option('t', "filetype", Required = true, HelpText = "Filter searched file with the specified filter name from the config file.")]
         public string FileFilterName { get; set; }
+        [Option("time", Default = false, HelpText = "Displays how long the operation took to complete.")]
+        public bool DisplayTime { get; set; }
     }
     
     internal class Program
@@ -247,6 +252,15 @@ namespace FlashSearch.CLI
         
         public static int Main(string[] args)
         {
+            bool displayTime = args.Contains("--time");
+
+            Stopwatch stopwatch = null;
+            if (displayTime)
+            {
+                stopwatch = new Stopwatch();
+                stopwatch.Start();
+            }
+
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
             
             try
@@ -263,6 +277,14 @@ namespace FlashSearch.CLI
             {
                 Console.Error.WriteLine(e.Message);
                 return 1;
+            }
+
+            if (displayTime)
+            {
+                stopwatch.Stop();
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine($"FlashSearch command took {stopwatch.Elapsed}");
+                Console.ResetColor();
             }
             
             return 0;
